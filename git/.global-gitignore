@@ -1,0 +1,42 @@
+### macOS ###
+# General
+.DS_Store
+.DS_Store?
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.Spotlight-V100
+.Trashes
+
+ehthumbs.db
+Thumbs.db
+
+### Node ###
+# Dependency directories
+node_modules/
+
+npm-debug.log
+yarn-error.log
+
+### PhpStorm ###
+# User-specific stuff
+.idea
+
+### Vim ###
+# Vim swap files
+.*.sw?
+
+### VisualStudioCode Patch ###
+# Support for Project snippet scope
+!.vscode/*.code-snippets
+
+### yarn ###
+# https://yarnpkg.com/advanced/qa#which-files-should-be-gitignored
+
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
