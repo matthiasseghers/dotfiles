@@ -11,8 +11,8 @@ fi
 
 # Zsh
 $DOTFILES_ROOT/zsh/install.sh
-$DOTFILES_ROOT/homebrew/install.sh
 $DOTFILES_ROOT/git/install.sh
+$DOTFILES_ROOT/homebrew/install.sh
 $DOTFILES_ROOT/composer/install.sh
 
 # XCode Command Line Tools
