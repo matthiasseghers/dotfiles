@@ -12,5 +12,7 @@ fi
 ln -sf $HOME/.dotfiles/zsh/.zshrc $HOME/.zshrc
 # Add aliases
 ln -sf $HOME/.dotfiles/zsh/.zshaliases $HOME/.zshaliases
+# Add secret aliases, for stuff you don't want to share
+touch $HOME/.zshaliases-secret
 
 exit 0
