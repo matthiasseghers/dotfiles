@@ -5,36 +5,27 @@
 # This installs some of the common dependencies needed (or at least desired)
 # using Homebrew.
 
-BREWTAPS=(
-  shivammathur/php
-)
+# Define the list of packages to install
+packages=("mackup" "ripgrep" "php")
 
-BREWAPPS=(
-  wget
-  mackup
-  php@8.0
-  openssl
-  httpd
-  ripgrep
-)
-
-# Check for Homebrew
-if test ! $(which brew); then
-  echo "Installing Homebrew for you."
-
-  # Install the correct homebrew for each OS type
-  if test "$(uname)" = "Darwin"; then
-    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-  elif test "$(expr substr $(uname -s) 1 5)" = "Linux"; then
-    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)"
-  fi
-
+# Check if Homebrew is installed
+if ! command -v brew &> /dev/null; then
+    echo "Homebrew is not installed. Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+else
+    echo "Homebrew is already installed."
 fi
 
-## Install (brew) apps
-echo "Adding brew taps..."
-brew tap ${BREWTAPS[@]}
-echo "Installing Applications..."
-brew install ${BREWAPPS[@]}
+# Install packages if they are not already installed
+for package in "${packages[@]}"; do
+    if ! brew list "$package" &> /dev/null; then
+        echo "Installing $package..."
+        brew install "$package"
+    else
+        echo "$package is already installed."
+    fi
+done
+
+echo "Brew installation process completed."
 
 exit 0
