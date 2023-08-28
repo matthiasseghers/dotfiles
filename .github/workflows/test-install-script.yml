@@ -1,0 +1,19 @@
+name: Test Install Script
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Make script executable
+        run: chmod +x install.sh
+
+      - name: Run install script
+        run: ./install.sh

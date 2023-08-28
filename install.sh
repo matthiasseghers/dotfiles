@@ -1,8 +1,24 @@
 #!/bin/sh
 
-# Check if installed in correct folder before installing.
-INSTALL_DIR="$HOME/.dotfiles"
-if [ "$(dirname "$0")" != "$INSTALL_DIR" ]; then
+# Determine the installation directory based on the environment
+if [ -n "$GITHUB_ACTIONS" ]; then
+    # GitHub Actions runner
+    INSTALL_DIR="$GITHUB_WORKSPACE"
+else
+    # Non-GitHub Actions environment
+    INSTALL_DIR="$HOME"
+fi
+
+# Debug: Print out relevant variables
+echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+echo "Script's directory: $(dirname "$0")"
+echo "Expected INSTALL_DIR: $INSTALL_DIR"
+
+# Change directory to the script's directory
+cd "$(dirname "$0")"
+
+# Check if installed in the correct folder before installing.
+if [ "$GITHUB_WORKSPACE" != "$INSTALL_DIR" ]; then
     echo "Please install in $INSTALL_DIR and rerun the install script."
     exit 1
 fi
