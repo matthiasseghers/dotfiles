@@ -1,22 +1,20 @@
 #!/bin/sh
 
 # Check if installed in correct folder before installing.
-cd "$(dirname "$0")/.."
-DOTFILES_ROOT=$(pwd -P)
-if [ "$(dirname $DOTFILES_ROOT)" = $HOME ]; then
-	echo "located in home"
-else
-	echo "please install in home and rerun the install script."
+INSTALL_DIR="$HOME/.dotfiles"
+if [ "$(dirname "$0")" != "$INSTALL_DIR" ]; then
+    echo "Please install in $INSTALL_DIR and rerun the install script."
+    exit 1
 fi
 
 # Zsh
-$DOTFILES_ROOT/zsh/install.sh
-$DOTFILES_ROOT/git/install.sh
-$DOTFILES_ROOT/homebrew/install.sh
-$DOTFILES_ROOT/composer/install.sh
+$INSTALL_DIR/zsh/install.sh
+$INSTALL_DIR/git/install.sh
+$INSTALL_DIR/homebrew/install.sh
+$INSTALL_DIR/composer/install.sh
 
 # XCode Command Line Tools
-if test ! $(which xcode-select); then
-	echo "Installing Xcode..."
-	xcode-select --install
+if ! command -v xcode-select &> /dev/null; then
+    echo "Installing Xcode Command Line Tools..."
+    xcode-select --install
 fi
