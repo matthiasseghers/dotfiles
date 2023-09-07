@@ -6,7 +6,7 @@
 # using Homebrew.
 
 # Define the list of packages to install
-packages=("mackup" "ripgrep" "php")
+packages=("mackup" "ripgrep" "php", "ffmpeg")
 
 # Check if Homebrew is installed
 if ! command -v brew &> /dev/null; then
