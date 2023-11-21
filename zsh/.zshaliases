@@ -29,18 +29,13 @@ function gitSearch() {
     fi # closing statement of if-else block
 }
 
-##################
-### Capistrano ###
-##################
-## Capistrano 2 alias
-alias cap2="cap _2.15.9_"
-
 ######################
 ### Docker/Docksal ###
 ######################
 ## docker aliases
 alias d="docker"
 alias dps="docker ps"
+alias dbackup='docker-compose images --quiet | xargs docker image inspect --format="{{.Id}}" | sed "s/^sha256://" | xargs docker save -o "images_$(date +%Y%m%d_%H%M%S).tar"'
 ## Docksal
 alias fmcert="fin mkcert create && fin p restart"
 
