@@ -12,11 +12,10 @@ alias pw="cd ~/Projects/Work"
 alias pp="cd ~/Projects/Private"
 alias please='sudo $(fc -ln -1)'
 alias myip='curl http://ipecho.net/plain; echo'
-alias sshaddkeys='ssh-add -K ~/.ssh/id_rsa_work && ssh-add -K ~/.ssh/id_rsa_personal'
-alias ssh-add-pers="ssh-add -K ~/.ssh/id_rsa_personal"
-alias ssh-add-work="ssh-add -K ~/.ssh/id_rsa_work"
+alias ssh-add-pers="ssh-add -K ~/.ssh/personal_key"
+alias ssh-add-work="ssh-add -K ~/.ssh/work_key"
 alias ssh-add-all="ssh-add-pers && ssh-add-work"
-alias launchitems="ls -A {~/Library/LaunchAgents,/Library/LaunchAgents,/Library/LaunchDaemons} "
+alias launchitems="ls -A {~/Library/LaunchAgents,/Library/LaunchAgents,/Library/LaunchDaemons}"
 
 ###########
 ### GIT ###
