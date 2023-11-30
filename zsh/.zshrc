@@ -105,7 +105,7 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 [ -f $HOME/.zshaliases ] && source $HOME/.zshaliases
-[ -f $HOME/.zshaliases ] && source $HOME/.zshaliases-secret
+[ -f $HOME/.zshaliases-secret ] && source $HOME/.zshaliases-secret
 
 # Composer bin
 export PATH=$PATH:$HOME/.composer/vendor/bin
