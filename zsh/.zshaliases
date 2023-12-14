@@ -11,8 +11,9 @@ alias p="cd ~/Projects"
 alias pw="cd ~/Projects/Work"
 alias pp="cd ~/Projects/Private"
 alias please='sudo $(fc -ln -1)'
-alias myip="dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com | sed 's/\"//g'"
-alias myip-local="ifconfig | grep 'inet ' | grep -Fv 127.0.0.1 | awk '{print \$2}'"
+alias myip-public="dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com | sed 's/\"//g'"
+alias myip-local="ipconfig getifaddr $(route get default | grep interface | awk '{print $2}')"
+alias showips='ifconfig -a | awk '\''/^[a-z]/{ interface=$1; next } /inet / && !/127.0.0.1/ {print interface ":", $2}'\'
 alias ssh-add-pers="ssh-add -K ~/.ssh/personal_key"
 alias ssh-add-work="ssh-add -K ~/.ssh/work_key"
 alias ssh-add-all="ssh-add-pers && ssh-add-work"
