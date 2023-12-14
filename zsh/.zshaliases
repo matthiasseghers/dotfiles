@@ -11,7 +11,8 @@ alias p="cd ~/Projects"
 alias pw="cd ~/Projects/Work"
 alias pp="cd ~/Projects/Private"
 alias please='sudo $(fc -ln -1)'
-alias myip='curl http://ipecho.net/plain; echo'
+alias myip="dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com | sed 's/\"//g'"
+alias myip-local="ifconfig | grep 'inet ' | grep -Fv 127.0.0.1 | awk '{print \$2}'"
 alias ssh-add-pers="ssh-add -K ~/.ssh/personal_key"
 alias ssh-add-work="ssh-add -K ~/.ssh/work_key"
 alias ssh-add-all="ssh-add-pers && ssh-add-work"
@@ -35,6 +36,7 @@ function gitSearch() {
 alias d="docker"
 alias dps="docker ps"
 alias dbackup='docker-compose images --quiet | xargs docker image inspect --format="{{.Id}}" | sed "s/^sha256://" | xargs docker save -o "images_$(date +%Y%m%d_%H%M%S).tar"'
+alias dnuke='confirm_nuke() { read -p "Are you sure you want to nuke Docker? This will delete all images and containers. (yes/no): " answer; if [ "$answer" == "yes" ]; then docker system prune -a; docker rmi $(docker images -a -q); docker stop $(docker ps -a -q); docker rm $(docker ps -a -q); else echo "Nuke aborted."; fi }; confirm_nuke'
 ## Docksal
 alias fmcert="fin mkcert create && fin p restart"
 
