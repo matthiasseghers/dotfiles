@@ -4,7 +4,7 @@
 alias config-zsh="code ~/.zshrc"
 alias config-alias="code ~/.zshaliases"
 alias config-ssh="code ~/.ssh/config"
-alias reload="source ~/.zshrc"
+alias reload='source ~/.zshrc && exec zsh'
 alias dl="cd ~/Downloads"
 alias dt="cd ~/Desktop"
 alias p="cd ~/Projects"
