@@ -53,7 +53,7 @@ function fin-db-import(){
 ###############
 ### Symfony ###
 ###############
-alias php-dumpcheck='rg "dump\(|console.log\("'
+alias php-dumpcheck='rg "dump\(|console.log\(|dd\("'
 
 ############
 ### Sulu ###
