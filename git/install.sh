@@ -18,6 +18,7 @@ read -p 'Git email: ' GIT_EMAIL
 git config --global user.name "$GIT_USERNAME" # add github account
 git config --global user.email $GIT_EMAIL     # add github email
 git config --global core.excludesFile $HOME/.gitignore
+git config --global --add --bool push.autoSetupRemote true
 echo "\033[0;32mDone"
 
 exit 0
