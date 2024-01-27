@@ -6,7 +6,7 @@ DOTFILES_ROOT=$(pwd -P)
 
 function bootstrapTerminal() {
 	sudo -v
-	source ~/.dotfiles/install
+	source ~/.dotfiles/install.sh
 }
 
 echo 'Bootstrap terminal'
