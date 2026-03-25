@@ -1,14 +1,9 @@
-# Local/private config goes in the include
+# Who am I (generated from gitconfig.local.symlink.example by script/bootstrap)
 [include]
         path = ~/.gitconfig.local
-[hub]
-        protocol = https
-[alias]
-        co = checkout
-        promote = !$ZSH/bin/git-promote
-        wtf     = !$ZSH/bin/git-wtf
-        rank-contributors = !$ZSH/bin/git-rank-contributors
-        count   = !git shortlog -sn
+# Folder-scoped identities (built up by bin/git-add-identity, silently ignored if missing)
+[include]
+        path = ~/.gitconfig.identities
 [color]
         diff = auto
         status = auto
@@ -26,17 +21,25 @@
 [help]
         autocorrect = 1
 [push]
-        # See `git help config` (search for push.default)
-        # for more information on different options of the below setting.
-        #
-        # Setting to git 2.0 default to suppress warning message
         default = simple
-[credential]
-	helper = osxkeychain
-[diff "spaceman-diff"]
-  command = /opt/homebrew/bin/spaceman-diff
-
-[init]
-	defaultBranch = main
+        autoSetupRemote = true
 [pull]
-	rebase = true
+        rebase = true
+[init]
+        defaultBranch = main
+[commit]
+        gpgsign = false
+[credential]
+        helper = osxkeychain
+[filter "lfs"]
+        clean = git-lfs clean -- %f
+        smudge = git-lfs smudge -- %f
+        process = git-lfs filter-process
+        required = true
+[diff "spaceman-diff"]
+        command = /opt/homebrew/bin/spaceman-diff
+[alias]
+        co = checkout
+        promote = !$ZSH/bin/git-promote
+        wtf     = !$ZSH/bin/git-wtf
+        count   = !git shortlog -sn

@@ -1,0 +1,13 @@
+# ~/.localrc — machine-specific shell configuration
+# This file is sourced by zsh/zshrc.symlink if it exists.
+# It is NEVER committed to the dotfiles repo.
+# Copy this file to ~/.localrc and customise for the current machine.
+
+# Example: ARM Mac Docker platform (prevents x86 image pull warnings)
+# export DOCKER_DEFAULT_PLATFORM=linux/arm64
+
+# Example: Work-specific API keys or tokens
+# export SOME_API_KEY="your-key-here"
+
+# Example: Machine-specific PATH additions
+# export PATH="$HOME/some/tool/bin:$PATH"
