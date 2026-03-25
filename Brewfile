@@ -1,40 +1,57 @@
 cask_args appdir: '/Applications'
 
 tap 'homebrew/bundle'
+tap 'homebrew/cask-fonts'
 
+# Shell
 brew 'atuin'
-brew 'cloudflared'
-brew 'imagemagick'
-brew 'postgresql@17'
-brew 'redis'
-brew 'ruby-build'
-brew 'spaceman-diff'
-brew 'spark'
-brew 'stripe/stripe-cli/stripe'
-brew 'stripe/stripe-mock/stripe-mock'
+brew 'starship'
+brew 'zsh-autosuggestions'
+brew 'zsh-syntax-highlighting'
+
+# Dev tools
+brew 'gh'
+brew 'git-lfs'
+brew 'lazygit'
+brew 'mise'
+brew 'pre-commit'
+brew 'ripgrep'
+
+# File & system utilities
+brew 'btop'
+brew 'eza'
+brew 'mackup'
 brew 'wget'
 brew 'yt-dlp'
 
+# Media
+brew 'imagemagick'
+
+# Network & tunnels
+brew 'cloudflared'
+
+# Local HTTPS
+brew 'mkcert'
+brew 'nss'
+
+# Git extras
+brew 'spaceman-diff'
+
+# Apps
 cask '1password'
-cask 'airtable'
-cask 'arq'
-cask 'codex'
-cask 'conductor'
-cask 'diffusionbee'
+cask 'firefox'
+cask 'firefox@developer-edition'
+cask 'font-meslo-lg-nerd-font'
 cask 'ghostty'
 cask 'handbrake-app'
 cask 'iina'
-cask 'messenger'
-cask 'notion-calendar'
-cask 'plex'
+cask 'iterm2'
+cask 'obsidian'
+cask 'orbstack'
 cask 'qlvideo'
-cask 'sonos'
-cask 'steam'
-cask 'transmission'
 cask 'raycast'
-cask 'whatsapp'
-cask 'windsurf'
+cask 'sequel-ace'
+cask 'transmission'
 cask 'visual-studio-code'
 cask 'vlc'
-cask 'zed'
-cask 'zoom'
+cask 'whatsapp'

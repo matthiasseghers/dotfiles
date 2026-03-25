@@ -1,3 +1,14 @@
+# macOS
 .DS_Store
+
+# Vim
 *~
+# Editor
+.idea/
 *.swp
+
+# PhpStorm / JetBrains
+.idea/
+
+# VS Code
+.vscode/

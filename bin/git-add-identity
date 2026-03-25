@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# git-add-identity — add a folder-scoped git identity
+#
+# Usage: git-add-identity
+#
+# Prompts for a label, name, email, and folder path.
+# Creates ~/.gitconfig-<label> and appends an [includeIf] block to ~/.gitconfig.identities.
+
+set -e
+
+GITCONFIG_IDENTITIES="$HOME/.gitconfig.identities"
+
+if [ ! -f "$HOME/.gitconfig.local" ]; then
+  echo "Error: ~/.gitconfig.local does not exist. Run script/bootstrap first."
+  exit 1
+fi
+
+printf "Label (e.g. work): "
+read -r label
+
+printf "Name: "
+read -r name
+
+printf "Email: "
+read -r email
+
+printf "Folder path (e.g. ~/Projects/Work/): "
+read -r folder
+
+# Expand ~
+folder="${folder/#\~/$HOME}"
+
+cfg_file="$HOME/.gitconfig-$label"
+
+cat > "$cfg_file" <<EOF
+[user]
+  name = $name
+  email = $email
+EOF
+
+cat >> "$GITCONFIG_IDENTITIES" <<EOF
+
+[includeIf "gitdir:$folder"]
+  path = $cfg_file
+EOF
+
+echo "✓ Identity '$label' added → $folder"
+echo "  Config: $cfg_file"

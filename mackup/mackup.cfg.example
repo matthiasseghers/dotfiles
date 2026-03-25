@@ -1,0 +1,15 @@
+# Mackup configuration example
+# Copy this to ~/.mackup.cfg (script/bootstrap will do this for you)
+# See https://github.com/lra/mackup/tree/master/doc for all options
+
+[storage]
+# Options: icloud, dropbox, google_drive, file_system
+engine = icloud
+
+# Uncomment to store in a custom directory (when engine = file_system)
+# path = ~/Sync
+# directory = Mackup
+
+# Uncomment to exclude specific apps from syncing
+# [applications_to_ignore]
+# vscode
