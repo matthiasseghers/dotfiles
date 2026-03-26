@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# Remove all symlinks in $HOME that point into this dotfiles repo.
+# Does not touch Homebrew packages or any generated files (~/.gitconfig.local etc).
+
+cd "$(dirname "$0")/.."
+DOTFILES_ROOT=$(pwd -P)
+
+echo ''
+
+success () {
+  printf "\r\033[2K  [ \033[00;32mOK\033[0m ] $1\n"
+}
+
+info () {
+  printf "\r  [ \033[00;34m..\033[0m ] $1\n"
+}
+
+info "Removing dotfile symlinks from $HOME"
+
+removed=0
+
+# Remove ~/.<name> symlinks created by bootstrap (*.symlink files)
+for src in $(find -H "$DOTFILES_ROOT" -maxdepth 2 -name '*.symlink' -not -path '*.git*')
+do
+  dst="$HOME/.$(basename "${src%.*}")"
+  if [ -L "$dst" ] && [[ "$(readlink "$dst")" == "$DOTFILES_ROOT"* ]]; then
+    rm "$dst"
+    success "removed $dst"
+    removed=$((removed + 1))
+  fi
+done
+
+# Remove ~/.ssh/config if it points into the repo
+if [ -L "$HOME/.ssh/config" ] && [[ "$(readlink "$HOME/.ssh/config")" == "$DOTFILES_ROOT"* ]]; then
+  rm "$HOME/.ssh/config"
+  success "removed ~/.ssh/config"
+  removed=$((removed + 1))
+fi
+
+echo ''
+info "Done. Removed $removed symlink(s)."
+info "Homebrew packages, ~/.gitconfig.local, and ~/.mackup.cfg were left untouched."
+echo ''

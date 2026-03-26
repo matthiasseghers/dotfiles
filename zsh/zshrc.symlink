@@ -1,5 +1,6 @@
-# shortcut to this dotfiles path is $ZSH
-export ZSH=$HOME/.dotfiles
+# Resolve the dotfiles root from wherever this file is symlinked
+# Works regardless of where the repo is cloned.
+export ZSH="${${(%):-%x}:A:h:h}"
 
 # your project folder that we can `c [tab]` to
 export PROJECTS=~/Code

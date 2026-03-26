@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#
+# Check for duplicate alias names across all .zsh files.
+
+dupes=$(grep -rh "^alias " . --include="*.zsh" | sed "s/alias //" | cut -d= -f1 | sort | uniq -d)
+
+if [[ -n "$dupes" ]]; then
+  echo "Error: duplicate aliases found:"
+  while IFS= read -r name; do
+    grep -rn "^alias ${name}=" . --include="*.zsh"
+  done <<< "$dupes"
+  exit 1
+fi

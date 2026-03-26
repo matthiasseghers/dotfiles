@@ -38,7 +38,7 @@ while test $# -gt 0; do
 	shift
 done
 
-export ZSH=$HOME/.dotfiles
+export ZSH="$(cd "$( dirname "$parentDirectory" )" && pwd -P)"
 
 # Update dotfiles themselves
 echo "› git pull"

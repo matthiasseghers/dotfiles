@@ -174,3 +174,13 @@ fi
 
 echo ''
 echo '  All installed!'
+echo ''
+info 'Next steps:'
+echo ''
+echo '  1. Run script/install to install Homebrew packages'
+echo '  2. Set up 1Password SSH agent:'
+echo '     1Password → Settings → Developer → Use the SSH agent'
+echo '     Then add your SSH keys in 1Password and copy public keys as needed'
+echo '  3. Set MesloLGS Nerd Font in your terminal (for Starship prompt icons)'
+echo '  4. Run bin/git-add-identity to add additional git identities (e.g. work)'
+echo ''
