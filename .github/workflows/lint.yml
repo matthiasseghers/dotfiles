@@ -1,0 +1,60 @@
+name: Lint
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install zsh
+        run: sudo apt-get install -y zsh
+
+      - name: Shell syntax (bash)
+        run: |
+          find script/ bin/ -type f | while read f; do
+            bash -n "$f" && echo "OK: $f"
+          done
+
+      - name: Shell syntax (zsh)
+        run: |
+          find . -name '*.zsh' -not -path './.git/*' | while read f; do
+            zsh -n "$f" && echo "OK: $f"
+          done
+
+      - name: Check for dangerous symlink targets
+        run: |
+          # These basenames would resolve to system dirs/files under $HOME
+          BLOCKED="config ssh local cache bash_history zsh_history"
+          fail=0
+          for f in $(find . -name '*.symlink' -not -path './.git/*'); do
+            name=$(basename "${f%.*}")
+            for blocked in $BLOCKED; do
+              if [ "$name" = "$blocked" ]; then
+                echo "ERROR: $f would create ~/.$name — use an install.sh instead"
+                fail=1
+              fi
+            done
+          done
+          exit $fail
+
+      - name: Check for duplicate aliases
+        run: |
+          dupes=$(grep -rh "^alias " . --include="*.zsh" | sed "s/alias //" | cut -d= -f1 | sort | uniq -d)
+          if [ -n "$dupes" ]; then
+            echo "Duplicate aliases found:"
+            grep -rn "^alias " . --include="*.zsh" | grep -E "alias ($(echo $dupes | tr ' ' '|'))="
+            exit 1
+          fi
+
+      - name: Secret scanning
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+            | grep '"tag_name"' | cut -d'"' -f4 | tr -d v)
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --no-git

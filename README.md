@@ -24,10 +24,12 @@ Everything is topic-centric. Each folder is a subject area — `git/`, `php/`, `
 ## install
 
 ```sh
-git clone https://github.com/matthiasseghers/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
+git clone https://github.com/matthiasseghers/dotfiles.git ~/dotfiles
+cd ~/dotfiles
 script/bootstrap
 ```
+
+> The repo can be cloned anywhere — `$ZSH` is resolved dynamically from the symlink.
 
 `script/bootstrap` will:
 1. Set up symlinks for all `*.symlink` files
@@ -66,8 +68,9 @@ This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gi
 ## after a fresh install
 
 1. Run `script/bootstrap` then `script/install`
-2. Run `uninstall_oh_my_zsh` if migrating from Oh My Zsh
-3. Run `brew bundle cleanup --force` to remove unlisted packages
-4. Enable 1Password SSH agent: Settings → Developer → Use the SSH agent
-5. Set **MesloLGS Nerd Font** in iTerm2: Preferences → Profiles → Text → Font
-6. Source the new shell: `source ~/.zshrc`
+2. Run `pre-commit install` to enable local lint hooks
+3. Run `uninstall_oh_my_zsh` if migrating from Oh My Zsh
+4. Run `brew bundle cleanup --force` to remove unlisted packages
+5. Enable 1Password SSH agent: Settings → Developer → Use the SSH agent
+6. Set **MesloLGS Nerd Font** in your terminal: Preferences → Profiles → Text → Font
+7. Source the new shell: `source ~/.zshrc`

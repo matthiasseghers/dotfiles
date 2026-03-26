@@ -28,8 +28,9 @@ read -r email
 printf "Folder path (e.g. ~/Projects/Work/): "
 read -r folder
 
-# Expand ~
+# Expand ~ and ensure trailing slash
 folder="${folder/#\~/$HOME}"
+folder="${folder%/}/"
 
 cfg_file="$HOME/.gitconfig-$label"
 

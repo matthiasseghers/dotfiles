@@ -1,7 +1,5 @@
 cask_args appdir: '/Applications'
 
-tap 'homebrew/bundle'
-tap 'homebrew/cask-fonts'
 
 # Shell
 brew 'atuin'
@@ -29,10 +27,7 @@ brew 'imagemagick'
 
 # Network & tunnels
 brew 'cloudflared'
-
-# Local HTTPS
-brew 'mkcert'
-brew 'nss'
+brew 'ctop'
 
 # Git extras
 brew 'spaceman-diff'
@@ -48,7 +43,7 @@ cask 'iina'
 cask 'iterm2'
 cask 'obsidian'
 cask 'orbstack'
-cask 'qlvideo'
+cask 'quicklook-video'
 cask 'raycast'
 cask 'sequel-ace'
 cask 'transmission'

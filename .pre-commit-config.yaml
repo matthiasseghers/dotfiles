@@ -1,0 +1,37 @@
+repos:
+  - repo: local
+    hooks:
+      - id: no-duplicate-aliases
+        name: Check for duplicate aliases
+        language: script
+        entry: script/check-aliases
+        files: \.zsh$
+
+      - id: no-dangerous-symlinks
+        name: Check for dangerous symlink targets
+        language: script
+        entry: script/check-symlinks
+        files: \.symlink$
+
+      - id: shell-syntax-bash
+        name: Shell syntax (bash)
+        language: system
+        entry: bash -n
+        files: ^(script/|bin/)
+
+      - id: shell-syntax-zsh
+        name: Shell syntax (zsh)
+        language: system
+        entry: zsh -n
+        files: \.zsh$
+
+      - id: no-hardcoded-dotfiles-path
+        name: No hardcoded ~/.dotfiles path
+        language: pygrep
+        entry: '\$HOME/\.dotfiles|~/\.dotfiles'
+        files: \.(zsh|symlink|sh)$|^(bin/|script/)
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
