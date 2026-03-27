@@ -4,3 +4,6 @@ Host *
   AddKeysToAgent yes
   ServerAliveInterval 60
   ServerAliveCountMax 30
+
+# Machine-specific overrides (not committed; silently ignored if absent)
+Include ~/.ssh/config.local

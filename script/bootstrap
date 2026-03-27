@@ -9,23 +9,7 @@ set -e
 
 echo ''
 
-info () {
-  printf "\r  [ \033[00;34m..\033[0m ] $1\n"
-}
-
-user () {
-  printf "\r  [ \033[0;33m??\033[0m ] $1\n"
-}
-
-success () {
-  printf "\r\033[2K  [ \033[00;32mOK\033[0m ] $1\n"
-}
-
-fail () {
-  printf "\r\033[2K  [\033[0;31mFAIL\033[0m] $1\n"
-  echo ''
-  exit
-}
+source "$DOTFILES_ROOT/script/lib/output.sh"
 
 setup_gitconfig () {
   if ! [ -f git/gitconfig.local.symlink ]
@@ -43,31 +27,6 @@ setup_gitconfig () {
     success 'gitconfig'
   fi
 }
-
-setup_mackup () {
-  if ! [ -f "$HOME/.mackup.cfg" ]
-  then
-    user ' - Set up mackup backup? [y/N]'
-    read -n 1 setup_mackup_answer
-    echo ''
-
-    if [[ "$setup_mackup_answer" =~ ^[Yy]$ ]]
-    then
-      user ' - Storage engine? [icloud/dropbox/file_system]'
-      read -e mackup_engine
-
-      {
-        echo "[storage]"
-        echo "engine = $mackup_engine"
-      } > "$HOME/.mackup.cfg"
-
-      success "mackup configured (engine: $mackup_engine)"
-    else
-      success 'mackup skipped'
-    fi
-  fi
-}
-
 
 link_file () {
   local src=$1 dst=$2
@@ -157,12 +116,27 @@ install_dotfiles () {
 }
 
 setup_gitconfig
-setup_mackup
 install_dotfiles
 
-# If we're on a Mac, let's install and setup homebrew.
+# If we're on a Mac, apply macOS defaults, set hostname, and install dependencies
 if [ "$(uname -s)" == "Darwin" ]
 then
+  info "applying macOS defaults"
+  if "$DOTFILES_ROOT/macos/set-defaults.sh"
+  then
+    success "macOS defaults applied"
+  else
+    fail "error applying macOS defaults"
+  fi
+
+  info "setting hostname"
+  if "$DOTFILES_ROOT/macos/set-hostname.sh"
+  then
+    success "hostname set"
+  else
+    fail "error setting hostname"
+  fi
+
   info "installing dependencies"
   if source bin/dot | while read -r data; do info "$data"; done
   then
@@ -173,14 +147,13 @@ then
 fi
 
 echo ''
-echo '  All installed!'
+success 'All installed!'
 echo ''
 info 'Next steps:'
 echo ''
-echo '  1. Run script/install to install Homebrew packages'
-echo '  2. Set up 1Password SSH agent:'
-echo '     1Password → Settings → Developer → Use the SSH agent'
-echo '     Then add your SSH keys in 1Password and copy public keys as needed'
-echo '  3. Set MesloLGS Nerd Font in your terminal (for Starship prompt icons)'
-echo '  4. Run bin/git-add-identity to add additional git identities (e.g. work)'
+info '  1. Set up 1Password SSH agent:'
+info '     1Password → Settings → Developer → Use the SSH agent'
+info '     Then add your SSH keys in 1Password and copy public keys as needed'
+info '  2. Set MesloLGS Nerd Font in your terminal (for Starship prompt icons)'
+info '  3. Run bin/git-add-identity to add git identities (e.g. work)'
 echo ''

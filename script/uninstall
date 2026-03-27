@@ -8,13 +8,7 @@ DOTFILES_ROOT=$(pwd -P)
 
 echo ''
 
-success () {
-  printf "\r\033[2K  [ \033[00;32mOK\033[0m ] $1\n"
-}
-
-info () {
-  printf "\r  [ \033[00;34m..\033[0m ] $1\n"
-}
+source "$DOTFILES_ROOT/script/lib/output.sh"
 
 info "Removing dotfile symlinks from $HOME"
 

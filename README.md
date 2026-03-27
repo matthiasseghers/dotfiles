@@ -32,28 +32,23 @@ script/bootstrap
 > The repo can be cloned anywhere — `$ZSH` is resolved dynamically from the symlink.
 
 `script/bootstrap` will:
-1. Set up symlinks for all `*.symlink` files
-2. Prompt for your primary git identity (name + email → `~/.gitconfig.local`)
-3. Optionally configure mackup (`~/.mackup.cfg`)
-
-Then install Homebrew packages:
-
-```sh
-script/install
-```
+1. Prompt for your primary git identity (name + email → `~/.gitconfig.local`)
+2. Set up symlinks for all `*.symlink` files
+3. Apply macOS defaults and prompt for hostname
+4. Install Homebrew and all packages from `Brewfile`
 
 ## machine-specific config
 
-Two files are generated per machine and **never committed**:
+These files are generated per machine and **never committed**:
 
 | File | Purpose |
 |---|---|
 | `~/.gitconfig.local` | Primary git identity (name + email) |
 | `~/.gitconfig.identities` | Folder-scoped git identities (`includeIf` rules) |
-| `~/.mackup.cfg` | Mackup storage engine |
-| `~/.localrc` | Machine-specific shell config (see `system/localrc.example`) |
+| `~/.ssh/config.local` | Machine-specific SSH hosts/overrides |
+| `~/.localrc` | Machine-specific shell config |
 
-To add shell config for the current machine only, create `~/.localrc`. See [system/localrc.example](system/localrc.example) for documented options.
+To add shell config for the current machine only, create `~/.localrc`.
 
 ## git identities
 
@@ -67,10 +62,10 @@ This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gi
 
 ## after a fresh install
 
-1. Run `script/bootstrap` then `script/install`
+1. Run `script/bootstrap`
 2. Run `pre-commit install` to enable local lint hooks
-3. Run `uninstall_oh_my_zsh` if migrating from Oh My Zsh
-4. Run `brew bundle cleanup --force` to remove unlisted packages
-5. Enable 1Password SSH agent: Settings → Developer → Use the SSH agent
-6. Set **MesloLGS Nerd Font** in your terminal: Preferences → Profiles → Text → Font
+3. Enable 1Password SSH agent: Settings → Developer → Use the SSH agent
+4. Add SSH keys in 1Password; copy public keys where needed
+5. Set **MesloLGS Nerd Font** in your terminal: Preferences → Profiles → Text → Font
+6. Run `bin/git-add-identity` to add folder-scoped git identities (e.g. work)
 7. Source the new shell: `source ~/.zshrc`
