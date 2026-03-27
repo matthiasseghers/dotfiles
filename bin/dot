@@ -41,14 +41,12 @@ done
 export ZSH="$(cd "$( dirname "$parentDirectory" )" && pwd -P)"
 
 # Update dotfiles themselves
-echo "› git pull"
-git -C $ZSH pull
-
-# Set macOS defaults
-$ZSH/macos/set-defaults.sh
-
-# Set macOS hostname
-$ZSH/macos/set-hostname.sh
+if git -C "$ZSH" diff --quiet && git -C "$ZSH" diff --cached --quiet 2>/dev/null; then
+	echo "› git pull"
+	git -C "$ZSH" pull
+else
+	echo "› git pull skipped (uncommitted changes in dotfiles repo)"
+fi
 
 # Install homebrew
 $ZSH/homebrew/install.sh 2>&1

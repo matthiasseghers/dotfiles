@@ -1,0 +1,6 @@
+# 1Password SSH agent config — copy to ~/.config/1Password/ssh/agent.toml
+# Docs: https://developer.1password.com/docs/ssh/agent/config/
+
+[[ssh-keys]]
+vault = "Private"
+item = "SSHKEYITEM"

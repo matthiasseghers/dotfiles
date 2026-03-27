@@ -20,7 +20,8 @@ defaults write com.apple.Finder FXPreferredViewStyle Nlsv
 chflags nohidden ~/Library
 
 # Set a really fast key repeat.
-defaults write NSGlobalDomain KeyRepeat -int 2
+defaults write NSGlobalDomain KeyRepeat -int 1
+defaults write NSGlobalDomain InitialKeyRepeat -int 10
 
 # Set the Finder prefs for showing a few different volumes on the Desktop.
 defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
@@ -36,6 +37,20 @@ defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
 
 # Show all file extensions in Finder.
 defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+
+# Disable auto-substitution of period on double-space.
+defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false
+
+# Show Finder status bar and path bar.
+defaults write com.apple.finder ShowStatusBar -bool true
+defaults write com.apple.finder ShowPathbar -bool true
+
+# Search the current folder by default in Finder.
+defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
+
+# Require password immediately after screensaver starts.
+defaults write com.apple.screensaver askForPassword -int 1
+defaults write com.apple.screensaver askForPasswordDelay -int 0
 
 # Apply changes
 killall Dock
