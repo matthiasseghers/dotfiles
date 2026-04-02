@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # dot
 #
@@ -35,10 +35,11 @@ while test $# -gt 0; do
 			displayUsageAndExit
 			;;
 	esac
-	shift
+
 done
 
-export ZSH="$(cd "$( dirname "$parentDirectory" )" && pwd -P)"
+ZSH="$(cd "$( dirname "$parentDirectory" )" && pwd -P)"
+export ZSH
 
 # Update dotfiles themselves
 if git -C "$ZSH" diff --quiet && git -C "$ZSH" diff --cached --quiet 2>/dev/null; then
@@ -49,7 +50,7 @@ else
 fi
 
 # Install homebrew
-$ZSH/homebrew/install.sh 2>&1
+"$ZSH"/homebrew/install.sh 2>&1
 
 # Upgrade homebrew
 echo "› brew update"
@@ -60,4 +61,4 @@ brew upgrade
 
 # Install software
 echo "› script/install"
-$ZSH/script/install
+"$ZSH"/script/install
