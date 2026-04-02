@@ -16,9 +16,9 @@ setup_gitconfig () {
   then
     info 'setup gitconfig'
 
-    user ' - What is your github author name?'
+    user ' What is your github author name?'
     read -e git_authorname
-    user ' - What is your github author email?'
+    user ' What is your github author email?'
     read -e git_authoremail
 
     sed -e "s/AUTHORNAME/$git_authorname/g" -e "s/AUTHOREMAIL/$git_authoremail/g" \
@@ -115,8 +115,27 @@ install_dotfiles () {
   done
 }
 
+install_config_files () {
+  info 'installing ~/.config files'
+
+  local overwrite_all=false backup_all=false skip_all=false
+
+  for src in $(find -H "$DOTFILES_ROOT" -mindepth 3 -type f -path '*/config/*' -not -path '*.git*' -not -name '*.symlink')
+  do
+    # Derive topic from the first path component after DOTFILES_ROOT
+    local rel="${src#$DOTFILES_ROOT/}"
+    local topic="${rel%%/*}"
+    # Derive path within config/ (strip <topic>/config/)
+    local subpath="${rel#$topic/config/}"
+    local dst="$HOME/.config/$topic/$subpath"
+    mkdir -p "$(dirname "$dst")"
+    link_file "$src" "$dst"
+  done
+}
+
 setup_gitconfig
 install_dotfiles
+install_config_files
 
 # If we're on a Mac, apply macOS defaults, set hostname, and install dependencies
 if [ "$(uname -s)" == "Darwin" ]

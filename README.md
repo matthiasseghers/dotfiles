@@ -5,6 +5,7 @@ Personal dotfiles for a PHP/Python development environment on macOS. Built on [h
 ## stack
 
 - **Shell**: zsh with [Starship](https://starship.rs) prompt
+- **History**: [Atuin](https://atuin.sh) — shell history sync across machines
 - **Version management**: [mise](https://mise.jdx.dev) — PHP, Python, Node per project
 - **Docker**: [OrbStack](https://orbstack.dev)
 - **SSH**: 1Password SSH agent — no key files on disk
@@ -19,6 +20,7 @@ Everything is topic-centric. Each folder is a subject area — `git/`, `php/`, `
 - **`topic/path.zsh`** — loaded first (for `$PATH` setup)
 - **`topic/completion.zsh`** — loaded last (for autocomplete)
 - **`topic/*.symlink`** — symlinked into `$HOME` as dotfiles by `script/bootstrap`
+- **`topic/config/**`** — symlinked into `~/.config/<topic>/` by `script/bootstrap`
 - **`bin/`** — scripts added to `$PATH`
 
 ## install
@@ -33,9 +35,23 @@ script/bootstrap
 
 `script/bootstrap` will:
 1. Prompt for your primary git identity (name + email → `~/.gitconfig.local`)
-2. Set up symlinks for all `*.symlink` files
+2. Set up symlinks for all `*.symlink` files into `$HOME` and all `topic/config/**` files into `~/.config/`
 3. Apply macOS defaults and prompt for hostname
 4. Install Homebrew and all packages from `Brewfile`
+
+## ~/.config/ files
+
+Files placed under `topic/config/` are symlinked into `~/.config/<topic>/` by `script/bootstrap`, preserving their path structure. This is the convention for any config that belongs under `~/.config/` rather than `$HOME`.
+
+For example:
+
+```
+atuin/config/config.toml       →  ~/.config/atuin/config.toml
+mise/config/config.toml        →  ~/.config/mise/config.toml
+starship/config/starship.toml  →  ~/.config/starship/starship.toml
+```
+
+Files keep their original names and extensions in the repo, so editor tooling (syntax highlighting, schema validation) works correctly.
 
 ## machine-specific config
 
