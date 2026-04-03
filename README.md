@@ -19,8 +19,10 @@ Everything is topic-centric. Each folder is a subject area — `git/`, `php/`, `
 - **`topic/*.zsh`** — loaded automatically into every shell session
 - **`topic/path.zsh`** — loaded first (for `$PATH` setup)
 - **`topic/completion.zsh`** — loaded last (for autocomplete)
-- **`topic/*.symlink`** — symlinked into `$HOME` as dotfiles by `script/bootstrap`
+- **`topic/*.symlink`** — symlinked into `$HOME` as `~/.<name>` by `script/bootstrap`
 - **`topic/config/**`** — symlinked into `~/.config/<topic>/` by `script/bootstrap`
+- **`topic/config.sh`** — run by `script/install` for edge-case symlinks (non-standard destinations)
+- **`topic/install.sh`** — run by `script/install` for actual software installation
 - **`bin/`** — scripts added to `$PATH`
 
 ## install
@@ -46,10 +48,11 @@ Files placed under `topic/config/` are symlinked into `~/.config/<topic>/` by `s
 For example:
 
 ```
-atuin/config/config.toml       →  ~/.config/atuin/config.toml
-mise/config/config.toml        →  ~/.config/mise/config.toml
-starship/config/starship.toml  →  ~/.config/starship/starship.toml
+atuin/config/config.toml  →  ~/.config/atuin/config.toml
+mise/config/config.toml   →  ~/.config/mise/config.toml
 ```
+
+Not all tools follow this convention. Starship expects `~/.config/starship.toml` (flat, not in a subdirectory), so it uses `starship/config.sh` to create that symlink — the same pattern as `ssh/config.sh` for `~/.ssh/config`.
 
 Files keep their original names and extensions in the repo, so editor tooling (syntax highlighting, schema validation) works correctly.
 
