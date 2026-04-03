@@ -42,9 +42,11 @@ ZSH="$(cd "$( dirname "$parentDirectory" )" && pwd -P)"
 export ZSH
 
 # Update dotfiles themselves
-if git -C "$ZSH" diff --quiet && git -C "$ZSH" diff --cached --quiet 2>/dev/null; then
+if git -C "$ZSH" remote get-url origin 2>/dev/null | grep -q '^https://'; then
+	echo "› git pull skipped (remote is HTTPS — switch to SSH: git remote set-url origin git@github.com:USER/dotfiles.git)"
+elif git -C "$ZSH" diff --quiet && git -C "$ZSH" diff --cached --quiet 2>/dev/null; then
 	echo "› git pull"
-	git -C "$ZSH" pull
+	git -C "$ZSH" pull 2>&1 || echo "› git pull failed — SSH key may not be set up yet"
 else
 	echo "› git pull skipped (uncommitted changes in dotfiles repo)"
 fi

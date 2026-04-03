@@ -176,3 +176,17 @@ info '     Then add your SSH keys in 1Password and copy public keys as needed'
 info '  2. Set MesloLGS Nerd Font in your terminal (for Starship prompt icons)'
 info '  3. Run bin/git-add-identity to add git identities (e.g. work)'
 echo ''
+
+if [ "$(uname -s)" == "Darwin" ]
+then
+  echo ''
+  user 'Some macOS defaults require a restart to take effect. Restart now? [y/N]'
+  read -rn 1 restart_answer
+  echo ''
+  if [ "$restart_answer" = "y" ] || [ "$restart_answer" = "Y" ]
+  then
+    sudo shutdown -r now
+  else
+    info 'Restart skipped — remember to restart later for all settings to apply.'
+  fi
+fi

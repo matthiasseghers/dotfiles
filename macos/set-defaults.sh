@@ -8,6 +8,11 @@
 #
 # Run ./set-defaults.sh and you'll be good to go.
 
+# Ask for account password upfront (needed for sysadminctl below)
+echo "Enter your account password (used to configure screen lock):"
+read -rs account_password
+echo ''
+
 # Disable press-and-hold for keys in favor of key repeat.
 defaults write -g ApplePressAndHoldEnabled -bool false
 
@@ -46,9 +51,9 @@ defaults write com.apple.finder ShowPathbar -bool true
 # Search the current folder by default in Finder.
 defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
 
-# Require password immediately after screensaver starts.
-defaults write com.apple.screensaver askForPassword -int 1
-defaults write com.apple.screensaver askForPasswordDelay -int 0
+# Require password immediately after screen lock (macOS 13+).
+# Note: defaults write com.apple.screensaver no longer works for this.
+echo "$account_password" | sysadminctl -screenLock immediate -password -
 
 # Apply changes
 killall Dock
