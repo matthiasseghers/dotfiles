@@ -52,7 +52,9 @@ atuin/config/config.toml  →  ~/.config/atuin/config.toml
 mise/config/config.toml   →  ~/.config/mise/config.toml
 ```
 
-Not all tools follow this convention. Starship expects `~/.config/starship.toml` (flat, not in a subdirectory), so it uses `starship/config.sh` to create that symlink — the same pattern as `ssh/config.sh` for `~/.ssh/config`.
+Not all tools follow this convention. SSH expects `~/.ssh/config` (outside `~/.config/` entirely), so it uses `ssh/config.sh` to create that symlink.
+
+Starship uses `STARSHIP_CONFIG` (set in `starship/env.zsh`) to point to `~/.config/starship/starship.toml`, so it fits the automatic convention.
 
 Files keep their original names and extensions in the repo, so editor tooling (syntax highlighting, schema validation) works correctly.
 
