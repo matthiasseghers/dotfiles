@@ -1,6 +1,5 @@
 cask_args appdir: '/Applications'
 
-
 # Shell
 brew 'atuin'
 brew 'starship'
@@ -46,6 +45,7 @@ cask 'orbstack'
 cask 'quicklook-video'
 cask 'raycast'
 cask 'sequel-ace'
+cask 'signal'
 cask 'transmission'
 cask 'visual-studio-code'
 cask 'vlc'
