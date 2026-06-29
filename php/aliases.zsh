@@ -11,10 +11,15 @@ alias tinker='php artisan tinker'
 
 # Check for leftover dd()/dump() calls before committing
 php-dumpcheck() {
-  if git diff --cached | rg -q '^\+.*\b(dd|dump|var_dump|print_r)\('; then
-    echo "⚠️  Debug dump found in staged changes."
-    return 1
-  else
-    echo "✓ No debug dumps found."
-  fi
+  local patterns=(-e '\{\{[ \t]*dump' -e '\{%[ \t]*dump' -e '\b(dd|var_dump|print_r)\(')
+  local globs=(--glob '*.php' --glob '*.twig')
+
+  echo "--- Staged changes ---"
+  git diff --cached -- '*.php' '*.twig' \
+    | rg "${patterns[@]}" -e '^\+' \
+    || echo "✓ No dumps in staged changes."
+
+  echo "--- Full codebase ---"
+  rg "${patterns[@]}" "${globs[@]}" . \
+    || echo "✓ No dumps found in codebase."
 }
