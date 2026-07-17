@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#
+# portcheck — show listening ports or what owns a specific port (macOS)
+# Usage: portcheck [port]
+
+set -euo pipefail
+
+if [[ $# -eq 0 ]]; then
+  echo "Listening TCP ports:"
+  lsof -nP -iTCP -sTCP:LISTEN
+elif [[ $# -eq 1 ]]; then
+  echo "Process on port $1:"
+  lsof -nP -iTCP:"$1" -sTCP:LISTEN
+else
+  echo "Usage: portcheck [port]" >&2
+  exit 1
+fi

@@ -1,0 +1,11 @@
+#!/bin/zsh
+#
+# mkcd — create a directory and cd into it
+# Usage: mkcd <directory_path>
+
+if [ -z "$1" ]; then
+  echo "Usage: mkcd <directory>" >&2
+  return 1
+fi
+
+mkdir -p "$1" && cd "$1"
