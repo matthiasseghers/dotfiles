@@ -6,6 +6,8 @@
 cd "$(dirname "$0")/.."
 DOTFILES_ROOT=$(pwd -P)
 
+set -euo pipefail
+
 echo ''
 
 source "$DOTFILES_ROOT/script/lib/output.sh"
@@ -15,15 +17,14 @@ info "Removing dotfile symlinks from $HOME"
 removed=0
 
 # Remove ~/.<name> symlinks created by bootstrap (*.symlink files)
-for src in $(find -H "$DOTFILES_ROOT" -maxdepth 2 -name '*.symlink' -not -path '*.git*')
-do
+while IFS= read -r src; do
   dst="$HOME/.$(basename "${src%.*}")"
   if [ -L "$dst" ] && [[ "$(readlink "$dst")" == "$DOTFILES_ROOT"* ]]; then
     rm "$dst"
     success "removed $dst"
     removed=$((removed + 1))
   fi
-done
+done < <(find -H "$DOTFILES_ROOT" -maxdepth 2 -name '*.symlink' -not -path '*/.git/*')
 
 # Remove ~/.ssh/config if it points into the repo
 if [ -L "$HOME/.ssh/config" ] && [[ "$(readlink "$HOME/.ssh/config")" == "$DOTFILES_ROOT"* ]]; then

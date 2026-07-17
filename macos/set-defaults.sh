@@ -8,10 +8,12 @@
 #
 # Run ./set-defaults.sh and you'll be good to go.
 
-# Ask for account password upfront (needed for sysadminctl below)
-echo "Enter your account password (used to configure screen lock):"
-read -rs account_password
-echo ''
+set -euo pipefail
+
+if [ "$(uname -s)" != "Darwin" ]; then
+  echo "set-defaults.sh is macOS only" >&2
+  exit 1
+fi
 
 # Disable press-and-hold for keys in favor of key repeat.
 defaults write -g ApplePressAndHoldEnabled -bool false
@@ -53,7 +55,8 @@ defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
 
 # Require password immediately after screen lock (macOS 13+).
 # Note: defaults write com.apple.screensaver no longer works for this.
-echo "$account_password" | sysadminctl -screenLock immediate -password -
+printf 'Enter your account password (used to configure screen lock): ' >&2
+sysadminctl -screenLock immediate -password -
 
 # Apply changes
 killall Dock
