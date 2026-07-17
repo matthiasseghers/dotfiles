@@ -13,7 +13,7 @@ brew 'lazygit'
 brew 'mise'
 brew 'pre-commit'
 brew 'ripgrep'
-brew 'copilot-cli'
+brew 'pi-coding-agent'
 
 # File & system utilities
 brew 'btop'
