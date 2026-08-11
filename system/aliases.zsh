@@ -8,6 +8,13 @@ then
   alias lt='eza --tree'
 fi
 
+# bat replaces cat
+if (( $+commands[bat] ))
+then
+  alias cat='bat --paging=never'
+  alias catp='bat --style=plain --paging=never'
+fi
+
 # Navigation
 alias dl='cd ~/Downloads'
 alias dt='cd ~/Desktop'
