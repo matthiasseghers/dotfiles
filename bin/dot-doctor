@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+# dot-doctor — diagnose dotfiles health after install or periodically.
+# Usage: dot-doctor
+
+set -euo pipefail
+
+ZSH="${ZSH:-$(cd "$(dirname "$0")/.." && pwd -P)}"
+fail=0
+
+info() { printf "  [ .. ] %s\n" "$1"; }
+success() { printf "  [ OK ] %s\n" "$1"; }
+fail() { printf "  [FAIL] %s\n" "$1"; fail=1; }
+
+echo "› dotfiles root: $ZSH"
+echo ""
+
+# Git status
+if git -C "$ZSH" diff --quiet && git -C "$ZSH" diff --cached --quiet; then
+  success "dotfiles repo is clean"
+else
+  fail "dotfiles repo has uncommitted changes"
+fi
+
+# Symlink targets
+info "checking symlinks..."
+symlinks=0
+broken=0
+while IFS= read -r link; do
+  symlinks=$((symlinks + 1))
+  [ -e "$link" ] || { fail "broken symlink: $link"; broken=$((broken + 1)); }
+done < <(find "$HOME" -maxdepth 1 -type l 2>/dev/null)
+[ "$broken" -eq 0 ] && success "$symlinks symlinks in ~ look healthy"
+
+# Required tools
+info "checking installed tools..."
+for tool in atuin bat eza mise starship zsh; do
+  if command -v "$tool" >/dev/null 2>&1; then
+    success "$tool installed"
+  else
+    fail "$tool not found in PATH"
+  fi
+done
+
+# mise status
+if command -v mise >/dev/null 2>&1; then
+  info "mise tools..."
+  mise list --current 2>/dev/null | while read -r line; do
+    success "mise: $line"
+  done || true
+fi
+
+# Shell startup time
+info "measuring zsh startup time..."
+time_ms=$( (time zsh -i -c exit) 2>&1 | grep real | sed -E 's/.*real[^0-9]*([0-9]+)m([0-9.]+)s.*//' )
+# zsh time output format varies; keep this diagnostic simple.
+success "run \`time zsh -i -c exit\` manually for startup timing"
+
+if [ "$fail" -eq 0 ]; then
+  echo ""
+  success "all checks passed"
+else
+  echo ""
+  fail "some checks failed"
+fi
+
+exit "$fail"
