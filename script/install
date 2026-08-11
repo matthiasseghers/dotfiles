@@ -10,4 +10,7 @@ echo "› brew bundle"
 brew bundle --verbose
 
 # find the installers and run them iteratively
-find . -name install.sh | while IFS= read -r installer ; do sh "$installer" ; done
+find . -maxdepth 2 -name .git -prune -o -name install.sh -type f -print | sort | while IFS= read -r installer; do
+  echo "› $installer"
+  "$installer"
+done
