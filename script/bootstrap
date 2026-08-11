@@ -147,6 +147,14 @@ then
     fail "error applying macOS defaults"
   fi
 
+  info "applying macOS security defaults"
+  if "$DOTFILES_ROOT/macos/set-security-defaults.sh" 2>&1 | while read -r data; do info "$data"; done
+  then
+    success "macOS security defaults applied"
+  else
+    fail "error applying macOS security defaults (run sudo macos/set-security-defaults.sh manually)"
+  fi
+
   info "setting hostname"
   if "$DOTFILES_ROOT/macos/set-hostname.sh"
   then

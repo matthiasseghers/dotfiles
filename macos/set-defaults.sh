@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# Sets reasonable macOS defaults.
-#
-# Or, in other words, set shit how I like in macOS.
+# Sets reasonable macOS defaults that do not require administrator privileges.
 #
 # The original idea (and a couple settings) were grabbed from:
 #   https://github.com/mathiasbynens/dotfiles/blob/master/.macos
@@ -52,11 +50,6 @@ defaults write com.apple.finder ShowPathbar -bool true
 
 # Search the current folder by default in Finder.
 defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
-
-# Require password immediately after screen lock (macOS 13+).
-# Note: defaults write com.apple.screensaver no longer works for this.
-printf 'Enter your account password (used to configure screen lock): ' >&2
-sysadminctl -screenLock immediate -password -
 
 # Apply changes
 killall Dock

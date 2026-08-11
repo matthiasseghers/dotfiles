@@ -1,0 +1,5 @@
+#!/bin/sh
+#
+# Sets admin-only macOS defaults by running $ZSH/macos/set-security-defaults.sh.
+
+exec $ZSH/macos/set-security-defaults.sh
