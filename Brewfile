@@ -18,6 +18,7 @@ brew 'pi-coding-agent'
 # File & system utilities
 brew 'btop'
 brew 'eza'
+brew 'grc'
 brew 'mackup'
 brew 'wget'
 brew 'yt-dlp'
