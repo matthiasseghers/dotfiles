@@ -6,7 +6,8 @@ Personal dotfiles for a PHP/Python development environment on macOS. Built on [h
 
 - **Shell**: zsh with [Starship](https://starship.rs) prompt
 - **History**: [Atuin](https://atuin.sh) — shell history sync across machines
-- **Version management**: [mise](https://mise.jdx.dev) — PHP, Python, Node per project
+- **Version management**: [mise](https://mise.jdx.dev) — Python, Node per project (prebuilt binaries)
+- **PHP versions**: [PHP Monitor](https://phpmon.app) — Homebrew-based PHP switching (mise only offers source-compiled PHP)
 - **Docker**: [OrbStack](https://orbstack.dev)
 - **SSH**: 1Password SSH agent — no key files on disk
 - **Editor**: VS Code

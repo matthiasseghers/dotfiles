@@ -1,5 +1,10 @@
 cask_args appdir: '/Applications'
 
+# Third-party taps
+tap 'nicoverbruggen/cask'
+tap 'shivammathur/php'         # PHP Monitor: legacy PHP versions
+tap 'shivammathur/extensions'  # PHP Monitor: PHP extensions
+
 # Shell
 brew 'atuin'
 brew 'starship'
@@ -47,6 +52,7 @@ cask 'iina'
 cask 'iterm2'
 cask 'obsidian'
 cask 'orbstack'
+cask 'phpmon'
 cask 'quicklook-video'
 cask 'raycast'
 cask 'sequel-ace'

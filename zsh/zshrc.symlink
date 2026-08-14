@@ -37,3 +37,4 @@ do
 done
 
 unset config_files
+export PATH=$HOME/bin:~/.config/phpmon/bin:$PATH
