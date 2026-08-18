@@ -42,6 +42,18 @@ script/bootstrap
 3. Apply macOS defaults and prompt for hostname
 4. Install Homebrew and all packages from `Brewfile`
 
+> **Fresh-install caveat**: the Brewfile taps `nicoverbruggen/cask` (for PHP Monitor), which Homebrew treats as an untrusted third-party tap. If `brew bundle` refuses the `phpmon` cask, run `brew trust nicoverbruggen/cask` once and re-run.
+
+## staying up to date
+
+Run `dot` periodically (it's on your `$PATH` via `bin/`):
+
+```sh
+dot
+```
+
+This pulls the dotfiles repo (skipped if you have uncommitted changes), runs `brew update && brew upgrade`, and installs anything new from the `Brewfile` and `topic/install.sh` scripts. `dot -e` opens the dotfiles directory in your editor.
+
 ## ~/.config/ files
 
 Files placed under `topic/config/` are symlinked into `~/.config/<topic>/` by `script/bootstrap`, preserving their path structure. This is the convention for any config that belongs under `~/.config/` rather than `$HOME`.
@@ -74,13 +86,17 @@ To add shell config for the current machine only, create `~/.localrc`.
 
 ## git identities
 
-The primary identity is set during bootstrap. To add a folder-scoped identity at any time:
+The primary identity is set during bootstrap. If you only ever commit as one identity, that's all you need — the machinery below is optional and silently ignored when unused.
+
+To add a folder-scoped identity (e.g. different author for work projects):
 
 ```sh
 bin/git-add-identity
 ```
 
-This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gitconfig.identities`, so commits in that folder automatically use the right identity.
+This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gitconfig.identities`, so commits under that folder automatically use the right identity. The script refuses duplicate labels and non-existent folders — both would otherwise fail silently.
+
+> **Note**: this scopes *commit authorship* (name/email), not SSH authentication or signing. If your identities use different SSH keys in 1Password, select the right key per host in `~/.ssh/config.local`.
 
 ## after a fresh install
 
@@ -89,5 +105,5 @@ This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gi
 3. Enable 1Password SSH agent: Settings → Developer → Use the SSH agent
 4. Add SSH keys in 1Password; copy public keys where needed
 5. Set **MesloLGS Nerd Font** in your terminal: Preferences → Profiles → Text → Font
-6. Run `bin/git-add-identity` to add folder-scoped git identities (e.g. work)
+6. Optionally run `bin/git-add-identity` if this machine needs folder-scoped git identities (e.g. work)
 7. Source the new shell: `source ~/.zshrc`
