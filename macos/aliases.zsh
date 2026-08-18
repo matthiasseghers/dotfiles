@@ -13,3 +13,12 @@ alias hidefiles='defaults write com.apple.finder AppleShowAllFiles NO && killall
 
 # Update all Homebrew packages
 alias brewup='brew update && brew upgrade && brew cleanup'
+
+# Toggle SSH (remote login)
+alias sshon="sudo systemsetup -setremotelogin on"
+alias sshoff="sudo systemsetup -setremotelogin off"
+alias sshstatus="sudo systemsetup -getremotelogin"
+
+# System Settings shortcuts
+alias sys-security='open "x-apple.systempreferences:com.apple.preference.security"'
+alias sys-displays='open "x-apple.systempreferences:com.apple.Displays-Settings.extension"'
