@@ -19,6 +19,14 @@ fi
 printf "Label (e.g. work): "
 read -r label
 
+# Guard against duplicate labels — a second [includeIf] for the same label
+# would silently win and orphan the first identity file
+if [ -f "$HOME/.gitconfig-$label" ] || grep -q "gitconfig-$label" "$GITCONFIG_IDENTITIES" 2>/dev/null; then
+  echo "Error: identity '$label' already exists (~/.gitconfig-$label)."
+  echo "Edit $GITCONFIG_IDENTITIES and ~/.gitconfig-$label manually to change it."
+  exit 1
+fi
+
 printf "Name: "
 read -r name
 
@@ -31,6 +39,13 @@ read -r folder
 # Expand ~ and ensure trailing slash
 folder="${folder/#\~/$HOME}"
 folder="${folder%/}/"
+
+# A typo'd path means the identity silently never applies — git does not
+# warn about [includeIf] blocks that match nothing
+if [ ! -d "$folder" ]; then
+  echo "Error: folder '$folder' does not exist."
+  exit 1
+fi
 
 cfg_file="$HOME/.gitconfig-$label"
 
