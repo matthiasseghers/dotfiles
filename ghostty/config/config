@@ -6,7 +6,7 @@ theme = Catppuccin Mocha
 
 # Window and behavior
 macos-titlebar-style = tabs
-macos-option-as-alt = true
+macos-option-as-alt = left
 mouse-hide-while-typing = true
 copy-on-select = clipboard
 window-padding-x = 8
