@@ -5,7 +5,7 @@ font-size = 13
 theme = Catppuccin Mocha
 
 # Window and behavior
-macos-titlebar-style = tabs
+macos-titlebar-style = native
 macos-option-as-alt = left
 mouse-hide-while-typing = true
 copy-on-select = clipboard
