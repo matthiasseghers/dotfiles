@@ -4,6 +4,7 @@ cask_args appdir: '/Applications'
 tap 'nicoverbruggen/cask'
 tap 'shivammathur/php'         # PHP Monitor: legacy PHP versions
 tap 'shivammathur/extensions'  # PHP Monitor: PHP extensions
+tap 'anomalyco/tap'            # opencode
 
 # Shell
 brew 'atuin'
@@ -20,6 +21,7 @@ brew 'mise'
 brew 'pre-commit'
 brew 'ripgrep'
 brew 'pi-coding-agent'
+brew 'opencode'
 
 # File & system utilities
 brew 'btop'
@@ -46,6 +48,7 @@ cask 'firefox@developer-edition'
 cask 'font-fira-code'
 cask 'font-jetbrains-mono'
 cask 'font-meslo-lg-nerd-font'
+cask 'freelens'
 cask 'ghostty'
 cask 'handbrake-app'
 cask 'iina'
