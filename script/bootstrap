@@ -6,6 +6,9 @@ cd "$(dirname "$0")/.."
 DOTFILES_ROOT=$(pwd -P)
 
 set -e
+# Detect failures of `if cmd | while read ...` pipelines (pipe status of the
+# last command would otherwise mask a failing first command).
+set -o pipefail
 
 echo ''
 
@@ -180,8 +183,12 @@ echo ''
 info '  1. Set up 1Password SSH agent:'
 info '     1Password → Settings → Developer → Use the SSH agent'
 info '     Then add your SSH keys in 1Password and copy public keys as needed'
-info '  2. Set MesloLGS Nerd Font in your terminal (for Starship prompt icons)'
-info '  3. Run bin/git-add-identity to add git identities (e.g. work)'
+info '  2. Restore machine-local secrets: local-restore'
+info '     (needs the 1Password CLI; see 1password/functions.zsh)'
+info '  3. Sign in to your sync service, let it finish syncing, then run'
+info '     `mackup restore` to bring back app settings (never `mackup link`)'
+info '  4. Set MesloLGS Nerd Font in your terminal (for Starship prompt icons)'
+info '  5. Run bin/git-add-identity to add git identities (e.g. work)'
 echo ''
 
 if [ "$(uname -s)" == "Darwin" ]
