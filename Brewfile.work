@@ -1,0 +1,25 @@
+cask_args appdir: '/Applications'
+
+# Work group — installed when DOTFILES_GROUPS in ~/.localrc lists "work".
+# Never add apps installed by company device management (MDM) here,
+# e.g. Company Portal, FortiClient, Microsoft Defender — brew would
+# fight the managed installs.
+
+# Third-party taps
+tap 'nicoverbruggen/cask'      # PHP Monitor cask
+tap 'shivammathur/php'         # PHP Monitor: legacy PHP versions
+tap 'shivammathur/extensions'  # PHP Monitor: PHP extensions
+
+# PHP
+brew 'php'
+brew 'composer'
+
+# Apps
+cask 'phpmon'
+cask 'phpstorm'
+cask 'tableplus'
+cask 'sequel-ace'
+cask 'postman'
+cask 'slack'
+cask 'freelens'
+cask 'claude'

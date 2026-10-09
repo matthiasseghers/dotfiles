@@ -6,8 +6,34 @@ set -e
 
 cd "$(dirname "$0")"/..  
 
+# App groups (Brewfile.<group>) — see README "app groups".
+DOTFILES_ROOT="$(pwd -P)"
+source "$DOTFILES_ROOT/script/lib/groups.sh"
+
+available="$(dotfiles_available_groups_line)"
+requested="$(dotfiles_requested_groups)"
+
+# Validate every requested group before installing anything.
+unknown="$(dotfiles_unknown_groups)"
+if [ -n "$unknown" ]; then
+  while IFS= read -r g; do
+    echo "Unknown group '$g' in DOTFILES_GROUPS. Available: $available" >&2
+  done <<<"$unknown"
+  exit 1
+fi
+
+if [ -z "$requested" ]; then
+  echo "› no DOTFILES_GROUPS set — installing shared apps only (available: $available; set it in ~/.localrc)"
+fi
+
 echo "› brew bundle"
-brew bundle --verbose
+brew bundle --verbose --file=Brewfile
+
+while IFS= read -r g; do
+  [ -n "$g" ] || continue
+  echo "› brew bundle (group: $g)"
+  brew bundle --verbose --file="Brewfile.$g"
+done <<<"$requested"
 
 # find the installers and run them iteratively
 find . -maxdepth 2 -name .git -prune -o -name install.sh -type f -print | sort | while IFS= read -r installer; do

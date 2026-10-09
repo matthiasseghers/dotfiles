@@ -1,0 +1,22 @@
+cask_args appdir: '/Applications'
+
+# Personal group — installed when DOTFILES_GROUPS in ~/.localrc lists
+# "personal".
+
+# Apps
+cask 'pcsx2'
+cask 'retroarch'
+cask 'runelite'
+cask 'porting-kit'
+cask 'dosbox'
+cask 'clone-hero'
+cask 'discord'
+cask 'obs'
+cask 'handbrake-app'
+cask 'transmission'
+cask 'sweet-home3d'
+cask 'brave-browser'
+cask 'highball'
+
+# No Homebrew cask (install manually):
+# - DuckStation (https://duckstation.org — installs DuckStation.app)

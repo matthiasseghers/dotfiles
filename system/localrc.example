@@ -9,5 +9,9 @@
 # Example: Work-specific API keys or tokens
 # export SOME_API_KEY="your-key-here"
 
+# Example: app groups to install with `dot` (space- or comma-separated;
+# available groups = the Brewfile.<name> files in the repo — see README)
+# export DOTFILES_GROUPS="work personal"
+
 # Example: Machine-specific PATH additions
 # export PATH="$HOME/some/tool/bin:$PATH"
