@@ -1,0 +1,5 @@
+# Binary image diffs via spaceman-diff (gitconfig.symlink sets the diff driver)
+*.png diff=spaceman-diff
+*.jpg diff=spaceman-diff
+*.jpeg diff=spaceman-diff
+*.gif diff=spaceman-diff

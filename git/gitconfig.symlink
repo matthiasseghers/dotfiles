@@ -12,6 +12,13 @@
 [core]
         excludesfile = ~/.gitignore
         editor = vim
+        pager = delta
+[interactive]
+        diffFilter = delta --color-only
+[delta]
+        navigate = true
+[merge]
+        conflictStyle = zdiff3
 [apply]
         whitespace = nowarn
 [mergetool]
@@ -37,7 +44,7 @@
         process = git-lfs filter-process
         required = true
 [diff "spaceman-diff"]
-        command = /opt/homebrew/bin/spaceman-diff
+        command = spaceman-diff
 [alias]
         co = checkout
         promote = !$ZSH/bin/git-promote
