@@ -59,7 +59,7 @@ while IFS= read -r src; do
     fail "missing or wrong link: $dst → $src"
     wrong=$((wrong + 1))
   fi
-done < <(find -H "$ZSH" -mindepth 3 -type f -path '*/config/*' -not -path '*/.git/*' -not -name '*.symlink')
+done < <(find -H "$ZSH" -mindepth 3 -type f -path '*/config/*' -not -path '*/.git/*' -not -name '*.symlink' -not -name '.DS_Store')
 
 # 3. ~/.ssh/config → ssh/config (created by ssh/install.sh; never read the file)
 ssh_dst="$HOME/.ssh/config"
@@ -87,7 +87,7 @@ while IFS= read -r link; do
       fi
       ;;
   esac
-done < <(find "$HOME/.config" -maxdepth 2 -type l 2>/dev/null)
+done < <(find "$HOME/.config" -maxdepth 3 -type l 2>/dev/null)
 if [ "$broken_config" -eq 0 ]; then
   success "no broken ~/.config symlinks into the repo"
 fi
