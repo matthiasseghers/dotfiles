@@ -129,7 +129,7 @@ install_config_files () {
     local dst="$HOME/.config/$topic/$subpath"
     mkdir -p "$(dirname "$dst")"
     link_file "$src" "$dst"
-  done < <(find -H "$DOTFILES_ROOT" -mindepth 3 -type f -path '*/config/*' -not -path '*/.git/*' -not -name '*.symlink')
+  done < <(find -H "$DOTFILES_ROOT" -mindepth 3 -type f -path '*/config/*' -not -path '*/.git/*' -not -name '*.symlink' -not -name '.DS_Store')
 }
 
 setup_gitconfig
