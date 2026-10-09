@@ -54,6 +54,16 @@ fi
 # Install homebrew
 "$ZSH"/homebrew/install.sh 2>&1
 
+# install.sh runs in a child process, so its shellenv eval does not reach us.
+# If brew is still not on PATH, load it for this process (Apple Silicon first).
+if ! command -v brew >/dev/null 2>&1; then
+  if [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [ -x /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+fi
+
 # Upgrade homebrew
 echo "› brew update"
 brew update
