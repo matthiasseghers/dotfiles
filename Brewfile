@@ -26,8 +26,7 @@ brew 'mise'
 brew 'pre-commit'
 brew 'ripgrep'
 brew 'yq'
-brew 'pi-coding-agent'
-brew 'opencode'
+brew 'anomalyco/tap/opencode-v2'
 
 # File & system utilities
 brew 'btop'
