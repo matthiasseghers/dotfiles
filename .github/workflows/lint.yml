@@ -4,57 +4,108 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
       - name: Install zsh
-        run: sudo apt-get install -y zsh
+        run: sudo apt-get update && sudo apt-get install -y zsh
 
-      - name: Shell syntax (bash)
-        run: |
-          find script/ bin/ -type f | while read f; do
-            bash -n "$f" && echo "OK: $f"
-          done
+      - name: Install pre-commit
+        run: pip install pre-commit
 
-      - name: Shell syntax (zsh)
-        run: |
-          find . -name '*.zsh' -not -path './.git/*' | while read f; do
-            zsh -n "$f" && echo "OK: $f"
-          done
+      - name: Cache pre-commit environments
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('**/.pre-commit-config.yaml') }}
 
-      - name: Check for dangerous symlink targets
-        run: |
-          # These basenames would resolve to system dirs/files under $HOME
-          BLOCKED="config ssh local cache bash_history zsh_history"
-          fail=0
-          for f in $(find . -name '*.symlink' -not -path './.git/*'); do
-            name=$(basename "${f%.*}")
-            for blocked in $BLOCKED; do
-              if [ "$name" = "$blocked" ]; then
-                echo "ERROR: $f would create ~/.$name — use an install.sh instead"
-                fail=1
-              fi
-            done
-          done
-          exit $fail
+      # The gitleaks hook only scans staged changes (`gitleaks git
+      # --pre-commit --staged`), which is always empty on CI — skip it here
+      # and run a full-repo detect in the dedicated step below.
+      - name: Run pre-commit
+        run: SKIP=gitleaks pre-commit run --all-files
 
-      - name: Check for duplicate aliases
+      - name: Secret scanning (full repo)
         run: |
-          dupes=$(grep -rh "^alias " . --include="*.zsh" | sed "s/alias //" | cut -d= -f1 | sort | uniq -d)
-          if [ -n "$dupes" ]; then
-            echo "Duplicate aliases found:"
-            grep -rn "^alias " . --include="*.zsh" | grep -E "alias ($(echo $dupes | tr ' ' '|'))="
-            exit 1
-          fi
-
-      - name: Secret scanning
-        run: |
-          VERSION=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
-            | grep '"tag_name"' | cut -d'"' -f4 | tr -d v)
-          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_linux_x64.tar.gz" \
             | tar -xz gitleaks
           ./gitleaks detect --source . --redact --no-git
+
+  fresh-home:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up sandbox
+        run: |
+          mkdir -p "$RUNNER_TEMP/sandbox-home" "$RUNNER_TEMP/shim"
+          cat > "$RUNNER_TEMP/shim/brew" <<'EOF'
+          #!/usr/bin/env bash
+          echo "[brew-stub] $*" >&2
+          exit 0
+          EOF
+          chmod +x "$RUNNER_TEMP/shim/brew"
+
+      # Darwin-only blocks are skipped on Linux; a fresh HOME means the
+      # file-conflict prompts (read from /dev/tty) never trigger.
+      - name: Bootstrap into sandbox HOME
+        run: |
+          export HOME="$RUNNER_TEMP/sandbox-home"
+          export PATH="$RUNNER_TEMP/shim:$PATH"
+          # Two stdin lines feed bootstrap's gitconfig prompts (name, email).
+          printf 'CI Author\nci@example.com\n' | script/bootstrap
+
+      - name: Install with groups
+        run: |
+          export HOME="$RUNNER_TEMP/sandbox-home"
+          export PATH="$RUNNER_TEMP/shim:$PATH"
+          export DOTFILES_GROUPS="work personal"
+          script/install
+
+      # Expectations are derived from the repo itself (same rules as
+      # bootstrap), so a new topic or config file is picked up automatically.
+      - name: Assert expected links
+        run: |
+          export HOME="$RUNNER_TEMP/sandbox-home"
+          missing=0
+          # 1. topic/*.symlink → ~/.<name> (gitconfig.local.symlink is
+          #    bootstrap-generated in the checkout, so it is expected too)
+          while IFS= read -r src; do
+            dst="$HOME/.$(basename "${src%.*}")"
+            if [ ! -L "$dst" ]; then
+              echo "MISSING: $dst (from $src)"
+              missing=$((missing + 1))
+            fi
+          done < <(find . -name '*.symlink' -not -path './.git/*')
+          # 2. topic/config/** → ~/.config/<topic>/<subpath>
+          while IFS= read -r src; do
+            rel="${src#./}"
+            topic="${rel%%/*}"
+            subpath="${rel#"$topic"/config/}"
+            dst="$HOME/.config/$topic/$subpath"
+            if [ ! -L "$dst" ]; then
+              echo "MISSING: $dst (from $src)"
+              missing=$((missing + 1))
+            fi
+          done < <(find . -mindepth 3 -type f -path '*/config/*' -not -path './.git/*' -not -name '*.symlink' -not -name '.DS_Store')
+          # 3. ssh/install.sh link
+          if [ ! -L "$HOME/.ssh/config" ]; then
+            echo "MISSING: $HOME/.ssh/config"
+            missing=$((missing + 1))
+          fi
+          [ "$missing" -eq 0 ] || exit 1
