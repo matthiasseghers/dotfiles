@@ -1,0 +1,62 @@
+name: macOS smoke
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Monthly: first day of the month at 09:00 UTC
+    - cron: '0 9 1 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            arch: arm64
+          - runner: macos-26-intel
+            arch: x86_64
+          # Uncomment when GitHub publishes the next-macOS beta image.
+          # Keep continue-on-error until the image is GA, then remove the flag.
+          # - runner: macos-27
+          #   continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: zsh syntax (Apple zsh)
+        run: |
+          while IFS= read -r -d '' f; do
+            zsh -n "$f"
+          done < <(find . -name '*.zsh' -not -path './.git/*' -print0)
+
+      - name: Check for duplicate aliases
+        run: ./script/check-aliases
+
+      - name: Check for dangerous symlink targets
+        run: ./script/check-symlinks
+
+      - name: Group validation
+        run: |
+          DOTFILES_ROOT="$PWD"
+          # shellcheck source=script/lib/groups.sh
+          source script/lib/groups.sh
+          unknown="$(DOTFILES_GROUPS='work personal' dotfiles_unknown_groups)"
+          [ -z "$unknown" ] || { echo "Unknown groups: $unknown"; exit 1; }
+
+      - name: Installers with sandboxed HOME
+        run: |
+          export HOME="$RUNNER_TEMP/sandbox-home"
+          mkdir -p "$HOME"
+          ./homebrew/install.sh
+          ./ssh/install.sh
+          test -L "$HOME/.ssh/config"
