@@ -1,0 +1,56 @@
+name: Brewfile full install
+
+on:
+  schedule:
+    # Monthly: first day of the month at 07:00 UTC
+    - cron: '0 7 1 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full-install:
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            arch: arm64
+          - runner: macos-26-intel
+            arch: x86_64
+          # Uncomment when GitHub publishes the next-macOS beta image.
+          # Keep continue-on-error until the image is GA, then remove the flag.
+          # - runner: macos-27
+          #   continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # bootstrap's final restart prompt hits EOF and exits 1 under set -e
+      # AFTER completing all work, so the "All installed!" marker is the
+      # success gate, not the exit code.
+      - name: Full new-machine install
+        run: |
+          export HOME="$RUNNER_TEMP/sandbox-home"
+          mkdir -p "$HOME"
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          export HOMEBREW_NO_INSTALL_CLEANUP=1
+          printf 'CI Author\nci@example.com\n' | script/bootstrap > "$RUNNER_TEMP/bootstrap.log" 2>&1 || true
+          if ! grep -q 'All installed!' "$RUNNER_TEMP/bootstrap.log"; then
+            cat "$RUNNER_TEMP/bootstrap.log"
+            exit 1
+          fi
+
+      - name: zsh startup smoke
+        run: |
+          export HOME="$RUNNER_TEMP/sandbox-home"
+          out="$(zsh -i -c 'exit' 2>&1)" || true
+          if printf '%s\n' "$out" | grep -q 'command not found'; then
+            printf '%s\n' "$out"
+            exit 1
+          fi

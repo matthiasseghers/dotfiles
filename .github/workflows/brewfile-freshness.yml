@@ -1,0 +1,22 @@
+name: Brewfile freshness
+
+on:
+  schedule:
+    # Weekly: Mondays at 07:00 UTC
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Brewfile entries
+        run: script/check-brewfile-entries

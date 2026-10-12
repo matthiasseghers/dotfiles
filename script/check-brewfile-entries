@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+#
+# check-brewfile-entries — verify every Brewfile entry still exists upstream.
+#
+# HTTP-only (no brew required):
+#   brew 'name'          → https://formulae.brew.sh/api/formula/<name>.json
+#   cask 'name'          → https://formulae.brew.sh/api/cask/<name>.json
+#   brew 'user/tap/name' → the tap repo via the GitHub API. Name-level
+#                          existence inside third-party taps is NOT checkable
+#                          via formulae.brew.sh — only the tap repo is verified.
+#   tap 'user/repo'      → https://api.github.com/repos/<user>/homebrew-<repo>
+#                          (homebrew/x resolves to Homebrew/homebrew-x; the
+#                          GitHub API matches owners case-insensitively)
+#
+# Checks every Brewfile* in the repo root (Brewfile.lock.json excluded).
+# Bash 3.2 compatible: no mapfile, no associative arrays.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+missing=0
+errors=0
+formulae=0
+casks=0
+taps=0
+
+# Tap repos already resolved this run, sentinel-delimited: " user/tap " for
+# good ones, " !user/tap " for missing/unreachable ones.
+verified_taps=" "
+
+entry_re="^(brew|cask|tap)[[:space:]]+[\"']([^\"']+)[\"']"
+
+# Print the HTTP status code for $1 (empty on network failure).
+http_code () {
+  curl -fsS --retry 2 --retry-delay 1 -o /dev/null -w '%{http_code}' "$1" 2>/dev/null || true
+}
+
+# Verify the GitHub repo backing the tap behind $1 ("user/repo" from a tap
+# line, or "user/tap/name" from a tap-qualified brew/cask). Caches the result
+# so each tap is requested at most once per run.
+check_tap () {
+  local name=$1 user rest tapname
+  user=${name%%/*}
+  rest=${name#*/}
+  tapname=${rest%%/*}
+  local tap_id="$user/$tapname"
+  case "$verified_taps" in
+    *" $tap_id "*) return 0 ;;
+    *" !$tap_id "*) return 1 ;;
+  esac
+  local status
+  status="$(http_code "https://api.github.com/repos/$user/homebrew-$tapname")"
+  if [ "$status" = "200" ]; then
+    verified_taps="$verified_taps$tap_id "
+    return 0
+  fi
+  verified_taps="$verified_taps!$tap_id "
+  return 1
+}
+
+for brewfile in Brewfile Brewfile.*; do
+  [ -e "$brewfile" ] || continue
+  case "$brewfile" in
+    *.lock.json) continue ;;
+  esac
+
+  while IFS= read -r line; do
+    case "$line" in
+      ''|'#'*) continue ;;
+    esac
+    if ! [[ $line =~ $entry_re ]]; then
+      continue
+    fi
+    kind=${BASH_REMATCH[1]}
+    name=${BASH_REMATCH[2]}
+
+    if [ "$kind" = "tap" ]; then
+      taps=$((taps + 1))
+      if ! check_tap "$name"; then
+        echo "MISSING: $brewfile: tap '$name'"
+        missing=$((missing + 1))
+      fi
+    elif [[ $name == */* ]]; then
+      # Tap-qualified brew/cask name: verify the tap repo only (see header).
+      taps=$((taps + 1))
+      if ! check_tap "$name"; then
+        echo "MISSING: $brewfile: $kind '$name' (tap repo missing or unreachable)"
+        missing=$((missing + 1))
+      fi
+    elif [ "$kind" = "brew" ]; then
+      formulae=$((formulae + 1))
+      status="$(http_code "https://formulae.brew.sh/api/formula/$name.json")"
+      if [ "$status" = "404" ]; then
+        echo "MISSING: $brewfile: brew '$name'"
+        missing=$((missing + 1))
+      elif [ "$status" != "200" ]; then
+        echo "ERROR: $brewfile: brew '$name' (unexpected HTTP $status)"
+        errors=$((errors + 1))
+      fi
+    elif [ "$kind" = "cask" ]; then
+      casks=$((casks + 1))
+      status="$(http_code "https://formulae.brew.sh/api/cask/$name.json")"
+      if [ "$status" = "404" ]; then
+        echo "MISSING: $brewfile: cask '$name'"
+        missing=$((missing + 1))
+      elif [ "$status" != "200" ]; then
+        echo "ERROR: $brewfile: cask '$name' (unexpected HTTP $status)"
+        errors=$((errors + 1))
+      fi
+    fi
+  done < "$brewfile"
+done
+
+total=$((formulae + casks + taps))
+failures=$((missing + errors))
+
+if [ "$failures" -eq 0 ]; then
+  echo "Checked $total entries ($formulae formulae, $casks casks, $taps taps): all present"
+  exit 0
+fi
+
+echo "Checked $total entries ($formulae formulae, $casks casks, $taps taps): $missing missing, $errors errors"
+exit 1
