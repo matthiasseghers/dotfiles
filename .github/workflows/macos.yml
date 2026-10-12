@@ -15,6 +15,8 @@ concurrency:
 jobs:
   smoke:
     runs-on: ${{ matrix.runner }}
+    # Private repos bill macOS runners at 10x — auto-skip; manual workflow_dispatch overrides (deliberate cost acceptance).
+    if: github.event_name == 'workflow_dispatch' || github.event.repository.private == false
     timeout-minutes: 20
 
     strategy:
@@ -60,3 +62,13 @@ jobs:
           ./homebrew/install.sh
           ./ssh/install.sh
           test -L "$HOME/.ssh/config"
+
+  skip-notice:
+    if: github.event.repository.private == true && github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Explain skip
+        run: |
+          echo "::notice title=macOS smoke skipped::This repo is private: macOS runners bill at 10x minutes (free on public repos). Trigger this workflow manually (workflow_dispatch) to run it anyway."
