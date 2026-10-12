@@ -6,7 +6,6 @@ set -euo pipefail
 
 BOLD='\033[1m'
 CYAN='\033[0;36m'
-YELLOW='\033[0;33m'
 GREEN='\033[0;32m'
 RESET='\033[0m'
 
@@ -37,7 +36,7 @@ STATUS=$(git status --short)
 if [[ -z "$STATUS" ]]; then
   echo -e "  ${GREEN}Clean${RESET}"
 else
-  echo "$STATUS" | sed 's/^/  /'
+  awk '{print "  " $0}' <<< "$STATUS"
 fi
 
 echo ""

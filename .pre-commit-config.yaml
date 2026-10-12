@@ -18,6 +18,8 @@ repos:
         language: system
         entry: bash -n
         files: ^(script/|bin/)
+        # Ruby scripts (extensionless, shebang-dispatched) live in bin/ too.
+        exclude: ^bin/git-(rank-contributors|wtf)$
 
       - id: shell-syntax-zsh
         name: Shell syntax (zsh)
@@ -30,6 +32,15 @@ repos:
         language: pygrep
         entry: '\$HOME/\.dotfiles|~/\.dotfiles'
         files: \.(zsh|symlink|sh)$|^(bin/|script/)
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        # Only POSIX/bash scripts; zsh files (functions/*, *.zsh) are not
+        # shellcheck-parseable (macos/aliases.zsh would match the path filter).
+        files: ^(script/|bin/|macos/)
+        exclude: \.zsh$
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0

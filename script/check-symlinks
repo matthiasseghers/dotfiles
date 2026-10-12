@@ -5,7 +5,7 @@
 BLOCKED="config ssh local cache bash_history zsh_history"
 fail=0
 
-for f in $(find . -name '*.symlink' -not -path './.git/*'); do
+while IFS= read -r f; do
   name=$(basename "${f%.*}")
   for blocked in $BLOCKED; do
     if [ "$name" = "$blocked" ]; then
@@ -13,6 +13,6 @@ for f in $(find . -name '*.symlink' -not -path './.git/*'); do
       fail=1
     fi
   done
-done
+done < <(find . -name '*.symlink' -not -path './.git/*')
 
 exit $fail

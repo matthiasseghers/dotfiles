@@ -54,7 +54,7 @@ link_file () {
 
       else
 
-        user "File already exists: $dst ($(basename "$src")), what do you want to do?\n\
+        user "File already exists: $dst ($(basename "$src")), what do you want to do?
         [s]kip, [S]kip all, [o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all?"
         read -rn 1 action < /dev/tty
 
@@ -167,6 +167,7 @@ then
   fi
 
   info "installing dependencies"
+  # shellcheck disable=SC1091 # bin/dot is linted on its own; staged runs exclude it from shellcheck's input
   if source bin/dot | while read -r data; do info "$data"; done
   then
     success "dependencies installed"
@@ -186,6 +187,8 @@ info '     Then add your SSH keys in 1Password and copy public keys as needed'
 info '  2. Restore machine-local secrets: local-restore'
 info '     (needs the 1Password CLI; see 1password/functions.zsh)'
 info '  3. Sign in to your sync service, let it finish syncing, then run'
+# Backticks are literal text here; double quotes would command-substitute.
+# shellcheck disable=SC2016
 info '     `mackup restore` to bring back app settings (never `mackup link`)'
 info '  4. Set MesloLGS Nerd Font in your terminal (for Starship prompt icons)'
 info '  5. Run bin/git-add-identity to add git identities (e.g. work)'

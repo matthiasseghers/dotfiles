@@ -9,8 +9,10 @@ ZSH="${ZSH:-$(cd "$(dirname "$0")/.." && pwd -P)}"
 fail=0
 
 # App groups (Brewfile.<group>) — shared parsing with script/install.
-DOTFILES_ROOT="$ZSH"
+# Exported: script/lib/groups.sh reads $DOTFILES_ROOT when sourced.
+export DOTFILES_ROOT="$ZSH"
 # shellcheck source=../script/lib/groups.sh
+# shellcheck disable=SC1091
 source "$ZSH/script/lib/groups.sh"
 
 info() { printf "  [ .. ] %s\n" "$1"; }

@@ -7,4 +7,6 @@
 # edit them in your editor next. Why waste time clicking around like some sort
 # of plebian when you can just run another command?
 
+# Word splitting is intentional: one argument per untracked file.
+# shellcheck disable=SC2046
 $EDITOR $(git ls-files --others --exclude-standard)
