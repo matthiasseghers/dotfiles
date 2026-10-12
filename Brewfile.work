@@ -15,7 +15,7 @@ brew 'php'
 brew 'composer'
 
 # Apps
-cask 'phpmon'
+cask 'nicoverbruggen/cask/phpmon'
 cask 'phpstorm'
 cask 'tableplus'
 cask 'sequel-ace'
