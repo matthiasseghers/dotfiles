@@ -37,8 +37,12 @@ Everything is topic-centric. Each folder is a subject area — `git/`, `php/`, `
 ```sh
 git clone https://github.com/matthiasseghers/dotfiles.git ~/dotfiles
 cd ~/dotfiles
+cp system/localgroups.example ~/.localgroups   # then uncomment `work` or `personal`
+$EDITOR ~/.localgroups
 script/bootstrap
 ```
+
+Create `~/.localgroups` **before** the first bootstrap: it is what tells `script/install` which app group this machine wants, so the shared `Brewfile` and that group's `Brewfile.<group>` install in one pass. Skip it and you get the shared apps only — `dot` installs the group later. Leave it with no active line for shared-only.
 
 > **Fresh Mac**: a new Mac has no `git` yet. Running `git clone` triggers the Xcode Command Line Tools install prompt — accept it, wait for the install to finish, then re-run the clone.
 
@@ -48,7 +52,7 @@ script/bootstrap
 1. Prompt for your primary git identity (name + email → `~/.gitconfig.local`)
 2. Set up symlinks for all `*.symlink` files into `$HOME` and all `topic/config/**` files into `~/.config/`
 3. Apply macOS defaults and prompt for hostname
-4. Install Homebrew and all packages from `Brewfile` plus your `DOTFILES_GROUPS` app groups
+4. Install Homebrew and all packages from `Brewfile` plus the app group selected in `~/.localgroups`
 
 > **Fresh-install caveat**: the `work` group taps `nicoverbruggen/cask` (for PHP Monitor), which Homebrew treats as an untrusted third-party tap. If `brew bundle` refuses the `phpmon` cask, run `brew trust nicoverbruggen/cask` once and re-run.
 
@@ -60,7 +64,7 @@ Run `dot` periodically (it's on your `$PATH` via `bin/`):
 dot
 ```
 
-This pulls the dotfiles repo (skipped if you have uncommitted changes), runs `brew update && brew upgrade`, and installs anything new from the `Brewfile`, your `DOTFILES_GROUPS` group files, and the `topic/install.sh` scripts. `dot -e` opens the dotfiles directory in your editor.
+This pulls the dotfiles repo (skipped if you have uncommitted changes), runs `brew update && brew upgrade`, and installs anything new from the `Brewfile`, the group selected in `~/.localgroups`, and the `topic/install.sh` scripts. `dot -e` opens the dotfiles directory in your editor.
 
 ## app groups
 
@@ -72,18 +76,25 @@ Apps are split across plain Brewfiles — one shared file every Mac gets, plus o
 | `Brewfile.work` | PHP tooling, work apps |
 | `Brewfile.personal` | Games, media, personal apps |
 
-Pick your groups per machine in `~/.localrc` (space- or comma-separated):
+Pick your group per machine in `~/.localgroups` (one line, space- or comma-separated):
 
 ```sh
-export DOTFILES_GROUPS="work personal"
+# ~/.localgroups
+work
 ```
 
-- **Unset** → only the shared `Brewfile` is installed.
-- **Adding a group later** = edit the line, open a new shell (or `source ~/.localrc`), run `dot`. Nothing is reset — what's installed stays.
+`system/localgroups.example` is a commented template — copy it and uncomment the line you want. Create it **before** the first `script/bootstrap` so the group's apps install in the same pass; add or change it later and `dot` installs them. `$DOTFILES_GROUPS` still works as a one-off override (and is what CI uses):
+
+```sh
+DOTFILES_GROUPS="work" dot
+```
+
+- **No active line** (no file, empty file, or everything commented) → only the shared `Brewfile` is installed.
+- **Adding a group later** = edit `~/.localgroups` and run `dot`. Nothing is reset — what's installed stays.
 - **Nothing is ever uninstalled automatically**: removing an app from a Brewfile leaves it on disk; remove apps by hand.
 - **New group** = create `Brewfile.<name>` in the repo root; it becomes available immediately.
-- **Typos** in `DOTFILES_GROUPS` are reported by `dot` (via `script/install`) and `dot-doctor` before anything is installed.
-- A group exists iff `Brewfile.<name>` exists. Each app appears in exactly one file, and taps sit in the same file as the formulae/casks that need them.
+- **Typos** in the selection are reported by `dot` (via `script/install`) and `dot-doctor` before anything is installed.
+- A group exists iff `Brewfile.<name>` exists. Each app appears in exactly one file (enforced by the `no-duplicate-brewfile-entries` pre-commit hook), and taps sit in the same file as the formulae/casks that need them.
 
 ## ~/.config/ files
 
@@ -104,19 +115,20 @@ Files keep their original names and extensions in the repo, so editor tooling (s
 
 ## machine-specific config
 
-These files are generated per machine and **never committed**:
+These files are per machine and **never committed**:
 
 | File | Purpose | How it comes back after a reinstall |
 |---|---|---|
 | `~/.gitconfig.local` | Primary git identity (name + email) | `script/bootstrap` prompt |
 | `~/.gitconfig.identities` (+ `~/.gitconfig-*`) | Folder-scoped git identities (`includeIf` rules) | `bin/git-add-identity` |
 | `~/.ssh/config.local` | Machine-specific SSH hosts/overrides | `local-restore`, or your own password manager |
-| `~/.localrc` | Machine-specific shell config, incl. `DOTFILES_GROUPS` app groups | `local-restore`, or your own password manager |
+| `~/.localgroups` | App group for this machine (`work`, `personal`, …) | you create it: `cp system/localgroups.example ~/.localgroups` — **not backed up** |
+| `~/.localrc` | Machine-specific shell config (secrets, env) | `local-restore`, or your own password manager |
 | `~/.config/mackup/mackup.cfg` | Mackup storage location + app whitelist (linked from `mackup/config/mackup.cfg`) | comes with the repo; per-machine override via `~/.mackup.cfg` |
 | `~/.config/1Password/ssh/agent.toml` | 1Password SSH agent config | `local-restore`, or your own password manager |
 | `~/.local/share/atuin/key` | Atuin history-sync encryption key | `local-restore`, or your own password manager |
 
-To add shell config for the current machine only, create `~/.localrc`.
+To add shell config for the current machine only, create `~/.localrc`. To pick this machine's app group, create `~/.localgroups` (see [app groups](#app-groups)).
 
 ## app settings (Mackup)
 
@@ -145,6 +157,7 @@ local-restore "dotfiles: other-machine"   # restore another machine's backup
 ```
 
 - The Document is titled `dotfiles: <hostname>`; override with `DOTFILES_BACKUP_NAME`.
+- `~/.localgroups` is deliberately **not** in the bundle: it is not a secret, and `op` only exists after bootstrap has already run — so the group's apps could never be installed from a restore. Create it by hand before bootstrap.
 - Restored secret files are chmod 600. `local-restore` never overwrites existing files (`tar -k`) — move them aside first.
 - Without 1Password, back up those files yourself (password manager, encrypted archive, …).
 - **Secrets never go into Mackup** — the Mackup whitelist deliberately excludes ssh, git and shell configs.
@@ -165,9 +178,9 @@ This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gi
 
 ## after a fresh install
 
-1. Install Xcode Command Line Tools / clone the repo (see [install](#install)), then run `script/bootstrap` — it prompts for your git identity, symlinks everything, asks where Mackup should store backups, and installs Homebrew + the Brewfile
+1. Install Xcode Command Line Tools / clone the repo (see [install](#install)), create `~/.localgroups` for this machine, then run `script/bootstrap` — it prompts for your git identity, symlinks everything, asks where Mackup should store backups, and installs Homebrew + the Brewfile and the selected app group
 2. Open 1Password (installed by the Brewfile), sign in, and enable the SSH agent and CLI integration: Settings → Developer → *Use the SSH agent* + *Connect with 1Password CLI*
-3. `local-restore` — brings back `~/.localrc`, `~/.ssh/config.local`, the 1Password agent config and the Atuin key (needs step 2's CLI integration); then open a new terminal and run `dot` again to install your app groups
+3. `local-restore` — brings back `~/.localrc`, `~/.ssh/config.local`, the 1Password agent config and the Atuin key (needs step 2's CLI integration). If you did **not** create `~/.localgroups` before bootstrap, or want to change groups, create/edit it and run `dot` to install them
 4. Sign in to your sync service (the Mackup storage folder), let it finish syncing, then run `mackup restore` — never `mackup link`
 5. `atuin login` — the encryption key came back in step 3, so history sync just works
 6. `pre-commit install` — enable the local lint hooks

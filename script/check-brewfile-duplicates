@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+#
+# check-brewfile-duplicates — assert that every brew/cask entry lives in
+# exactly one Brewfile* in the repo root.
+#
+# Why: apps are split across a shared Brewfile plus optional
+# Brewfile.<group> app groups. An entry listed twice is either a misplaced
+# app or a merge artifact, and makes it ambiguous which file owns it.
+#
+# Scope: brew and cask entries only.
+#   - tap lines are skipped on purpose: the same tap may legitimately appear
+#     in more than one file where its formulae/casks are needed (README
+#     "app groups").
+#   - cask_args lines, comments and blank lines are ignored.
+#   - names are compared literally, so a tap-qualified 'user/tap/name' and a
+#     bare 'name' are different entries.
+#
+# This check is cross-file, so it scans the repo root itself and ignores any
+# argv (pre-commit may pass matched filenames; the hook also sets
+# pass_filenames: false).
+#
+# Bash 3.2 compatible: no mapfile, no associative arrays.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+brewfiles=()
+for f in Brewfile*; do
+  [ -f "$f" ] || continue
+  case "$f" in
+    *.lock.json) continue ;;
+  esac
+  brewfiles+=("$f")
+done
+
+if [ "${#brewfiles[@]}" -eq 0 ]; then
+  echo "check-brewfile-duplicates: no Brewfile* found in $PWD" >&2
+  exit 1
+fi
+
+# "type<TAB>name<TAB>file:line" for every brew/cask entry. Trailing comments
+# are cut off by stopping at the closing quote.
+entries="$(grep -HnE "^(brew|cask)[[:space:]]+[\"']" "${brewfiles[@]}" \
+  | sed -E "s/^([^:]+):([0-9]+):(brew|cask)[[:space:]]+[\"']([^\"']+)[\"'].*/\3\t\4\t\1:\2/" \
+  || true)"
+
+duplicates="$(printf '%s\n' "$entries" | cut -f1,2 | sort | uniq -d)"
+
+if [ -z "$duplicates" ]; then
+  echo "no duplicate brew/cask entries across: ${brewfiles[*]}"
+  exit 0
+fi
+
+while IFS=$'\t' read -r type name; do
+  [ -n "$type" ] || continue
+  echo "duplicate $type '$name' — each brew/cask may appear in only one Brewfile:" >&2
+  printf '%s\n' "$entries" \
+    | awk -F'\t' -v t="$type" -v n="$name" '$1 == t && $2 == n { print "  " $3 }' >&2
+done <<<"$duplicates"
+
+exit 1

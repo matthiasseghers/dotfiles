@@ -13,6 +13,15 @@ repos:
         entry: script/check-symlinks
         files: \.symlink$
 
+      # Cross-file check (an app may live in only one Brewfile*), so it reads
+      # the repo itself and must not receive the matched filenames as argv.
+      - id: no-duplicate-brewfile-entries
+        name: Check for duplicate Brewfile entries
+        language: script
+        entry: script/check-brewfile-duplicates
+        files: ^Brewfile
+        pass_filenames: false
+
       - id: shell-syntax-bash
         name: Shell syntax (bash)
         language: system

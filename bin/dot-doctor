@@ -143,23 +143,108 @@ else
   warn "no mackup config found — the ~/.config/mackup/mackup.cfg link is missing (script/bootstrap creates it)"
 fi
 
-# App groups (DOTFILES_GROUPS → Brewfile.<group>)
+# App groups (~/.localgroups → Brewfile.<group>)
 info "checking app groups..."
 available="$(dotfiles_available_groups_line)"
 requested="$(dotfiles_requested_groups)"
+groups_source="$(dotfiles_groups_source)"
+
+case "$groups_source" in
+  env)
+    info "groups from \$DOTFILES_GROUPS (environment override)"
+    from_file="$(dotfiles_groups_from_file)"
+    # Compare as sets: the same groups in a different order are not a conflict.
+    if [ -n "$from_file" ] && [ "$(printf '%s\n' "$from_file" | sort)" != "$(printf '%s\n' "$requested" | sort)" ]; then
+      file_line="$(printf '%s' "$from_file" | tr '\n' ' ' | sed -e 's/ *$//')"
+      warn "selection in ~/.localgroups is '$file_line' — the environment override wins for this run"
+    fi
+    ;;
+  file)
+    info "groups from ~/.localgroups"
+    ;;
+  *)
+    info "no ~/.localgroups and no \$DOTFILES_GROUPS"
+    ;;
+esac
+
 if [ -z "$requested" ]; then
-  warn "no DOTFILES_GROUPS set — installing shared apps only (available: $available; set it in ~/.localrc)"
+  warn "no app group selected — installing shared apps only (available: $available; create ~/.localgroups — see system/localgroups.example)"
 else
   unknown="$(dotfiles_unknown_groups)"
   if [ -n "$unknown" ]; then
-    while IFS= read -r g; do
-      fail "Unknown group '$g' in DOTFILES_GROUPS. Available: $available"
-    done <<<"$unknown"
+    if [ "$groups_source" = env ]; then
+      while IFS= read -r g; do
+        fail "Unknown group '$g' in \$DOTFILES_GROUPS. Available: $available"
+      done <<<"$unknown"
+    else
+      while IFS= read -r g; do
+        fail "Unknown group '$g' in ~/.localgroups. Available: $available"
+      done <<<"$unknown"
+    fi
   else
     while IFS= read -r g; do
       success "group '$g' active (Brewfile.$g)"
     done <<<"$requested"
   fi
+fi
+
+# Machine-local files: present/absent only. Absence is normal for the
+# optional ones, so warn only when it looks like something was lost —
+# never on a machine that simply never configured it.
+info "checking machine-local files..."
+
+if [ -f "$HOME/.gitconfig.local" ]; then
+  success "present: ~/.gitconfig.local"
+elif [ -L "$HOME/.gitconfig" ]; then
+  warn "missing: ~/.gitconfig.local — this machine ran bootstrap, so the git identity file was probably lost"
+else
+  info "missing: ~/.gitconfig.local (script/bootstrap creates it)"
+fi
+
+identity_count=0
+for f in "$HOME"/.gitconfig-*; do
+  [ -e "$f" ] || continue
+  identity_count=$((identity_count + 1))
+done
+
+if [ -f "$HOME/.gitconfig.identities" ]; then
+  success "present: ~/.gitconfig.identities"
+  identity_refs=0
+  while IFS= read -r ref; do
+    [ -n "$ref" ] || continue
+    identity_refs=$((identity_refs + 1))
+    if [ -f "$ref" ]; then
+      success "present: $ref"
+    else
+      warn "missing: $ref (referenced by ~/.gitconfig.identities — commits under that folder silently fall back to the primary identity)"
+    fi
+  done < <(sed -n 's/^[[:space:]]*path[[:space:]]*=[[:space:]]*//p' "$HOME/.gitconfig.identities")
+  [ "$identity_refs" -gt 0 ] || warn "no [includeIf] path entries in ~/.gitconfig.identities"
+elif [ "$identity_count" -gt 0 ]; then
+  warn "missing: ~/.gitconfig.identities — $identity_count ~/.gitconfig-* file(s) exist, so the includeIf rules are gone (re-add with bin/git-add-identity)"
+else
+  info "no folder-scoped git identities (optional)"
+fi
+
+if [ -f "$HOME/.localrc" ]; then
+  success "present: ~/.localrc"
+  if grep -Eq '^[[:space:]]*export[[:space:]]+DOTFILES_GROUPS=' "$HOME/.localrc" 2>/dev/null; then
+    warn "DOTFILES_GROUPS still set in ~/.localrc — move the selection to ~/.localgroups so it survives a secrets restore"
+  fi
+else
+  info "missing: ~/.localrc (optional; restored by local-restore or your own password manager)"
+fi
+
+if [ -f "$(dotfiles_groups_file)" ]; then
+  success "present: ~/.localgroups"
+else
+  info "missing: ~/.localgroups (optional; shared apps only — see system/localgroups.example)"
+fi
+
+if [ -f "$HOME/.ssh/config.local" ]; then
+  success "present: ~/.ssh/config.local"
+else
+  info "missing: ~/.ssh/config.local (optional; restored by local-restore or your own password manager)"
 fi
 
 # Required tools

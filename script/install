@@ -16,14 +16,20 @@ requested="$(dotfiles_requested_groups)"
 # Validate every requested group before installing anything.
 unknown="$(dotfiles_unknown_groups)"
 if [ -n "$unknown" ]; then
-  while IFS= read -r g; do
-    echo "Unknown group '$g' in DOTFILES_GROUPS. Available: $available" >&2
-  done <<<"$unknown"
+  if [ "$(dotfiles_groups_source)" = env ]; then
+    while IFS= read -r g; do
+      echo "Unknown group '$g' in \$DOTFILES_GROUPS. Available: $available" >&2
+    done <<<"$unknown"
+  else
+    while IFS= read -r g; do
+      echo "Unknown group '$g' in ~/.localgroups. Available: $available" >&2
+    done <<<"$unknown"
+  fi
   exit 1
 fi
 
 if [ -z "$requested" ]; then
-  echo "› no DOTFILES_GROUPS set — installing shared apps only (available: $available; set it in ~/.localrc)"
+  echo "› no app group selected — installing shared apps only (available: $available; create ~/.localgroups to install one)"
 fi
 
 echo "› brew bundle"

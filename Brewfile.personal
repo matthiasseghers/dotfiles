@@ -1,7 +1,6 @@
 cask_args appdir: '/Applications'
 
-# Personal group — installed when DOTFILES_GROUPS in ~/.localrc lists
-# "personal".
+# Personal group — installed when ~/.localgroups lists "personal".
 
 # Apps
 cask 'pcsx2'
