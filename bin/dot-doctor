@@ -148,7 +148,7 @@ if [ -n "$mackup_cfg" ]; then
       esac
     fi
     case "$storage_check" in
-      "$HOME"/Library/CloudStorage/*)
+      "$HOME"/Library/CloudStorage/* | "$HOME"/Library/Mobile\ Documents/com~apple~CloudDocs/*)
         success "mackup storage is in a synced folder ($storage_check)"
         ;;
       *)
