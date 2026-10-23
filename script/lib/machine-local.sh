@@ -1,4 +1,4 @@
-# Machine-local files, relative to $HOME — the single source of truth for
+# Machine-local files, relative to $HOME - the single source of truth for
 # bin/dot-doctor (what it reports) and 1password/functions.zsh (what
 # local-backup packs). Plain POSIX sh assignments so both bash and zsh can
 # source it; exported so the consumers see them.

@@ -1,4 +1,4 @@
-# ~/.localrc — machine-specific shell configuration
+# ~/.localrc - machine-specific shell configuration
 # This file is sourced by zsh/zshrc.symlink if it exists.
 # It is NEVER committed to the dotfiles repo.
 # Copy this file to ~/.localrc and customise for the current machine.

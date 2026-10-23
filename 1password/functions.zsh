@@ -1,7 +1,7 @@
 # 1Password backup for machine-local files (optional): secrets plus the
 # folder-scoped git identities, which are not secrets but are equally
 # annoying to rebuild by hand. Loaded only when the `op` CLI is installed.
-# These files never go into Mackup or the dotfiles repo — they travel as
+# These files never go into Mackup or the dotfiles repo - they travel as
 # one tgz Document.
 
 (( $+commands[op] )) || return
@@ -10,7 +10,7 @@
 # bin/dot-doctor so the two cannot drift.
 _machine_local_lib="${${(%):-%x}:A:h:h}/script/lib/machine-local.sh"
 if [[ ! -r $_machine_local_lib ]]; then
-  print -u2 "1password: missing $_machine_local_lib — cannot determine backup targets"
+  print -u2 "1password: missing $_machine_local_lib - cannot determine backup targets"
   return 1
 fi
 source "$_machine_local_lib"
@@ -61,7 +61,7 @@ local-backup () {
 
 # Restore a backup Document into $HOME (default: this machine's title;
 # pass another machine's title to restore that backup instead).
-# Refuses to overwrite existing files — move them aside first.
+# Refuses to overwrite existing files - move them aside first.
 local-restore () {
   local title="${1:-${DOTFILES_BACKUP_NAME:-dotfiles: $(scutil --get LocalHostName)}}"
   local f tar_status=0
@@ -74,7 +74,7 @@ local-restore () {
   # Identity files are already in $HOME; only existing ones can conflict.
   for f in ${globbed:#}; do existing+=("$f"); done
   if (( $#existing )); then
-    print -u2 "local-restore: refusing to overwrite: ${existing[*]} — move aside and re-run"
+    print -u2 "local-restore: refusing to overwrite: ${existing[*]} - move aside and re-run"
     return 1
   fi
   print "local-restore: restoring $title"

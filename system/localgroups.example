@@ -1,16 +1,17 @@
-# ~/.localgroups — app groups for this machine
+# ~/.localgroups - app groups for this machine
 #
 # This file is READ, not sourced: no `export` needed, and it is never
 # committed. script/install and bin/dot-doctor read it; $DOTFILES_GROUPS
 # overrides it for a single run (and in CI).
 #
-# Copy this file to ~/.localgroups and uncomment the line you want:
+# Copy this file to ~/.localgroups and uncomment what this machine wants:
 #
 #   cp system/localgroups.example ~/.localgroups
 #
-# One line: group names, space- or comma-separated. Available groups are
-# the Brewfile.<name> files in the repo root. With no active line (or no
-# file at all) only the shared Brewfile is installed.
+# Each line: group names, space- or comma-separated. All uncommented lines
+# combine, so work plus personal is valid. Available groups are the
+# Brewfile.<name> files in the repo root. With no active line (or no file
+# at all) only the shared Brewfile is installed.
 #
 # Create this BEFORE the first `script/bootstrap` so the shared apps and
 # the group's apps install in one pass; adding it later means running

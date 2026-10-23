@@ -43,7 +43,7 @@ dotfiles_available_groups_line() {
 }
 
 # Print the machine-local group selection file. This is the only place the
-# path is defined — everything else calls this function.
+# path is defined - everything else calls this function.
 dotfiles_groups_file() {
   printf '%s\n' "$HOME/.localgroups"
 }
