@@ -11,9 +11,13 @@ fail=0
 # App groups (Brewfile.<group>) — shared parsing with script/install.
 # Exported: script/lib/groups.sh reads $DOTFILES_ROOT when sourced.
 export DOTFILES_ROOT="$ZSH"
-# shellcheck source=../script/lib/groups.sh
+# app-group parsing (script/lib/groups.sh reads $DOTFILES_ROOT when sourced)
+# shellcheck source=script/lib/groups.sh
 # shellcheck disable=SC1091
 source "$ZSH/script/lib/groups.sh"
+# shellcheck source=script/lib/machine-local.sh
+# shellcheck disable=SC1091
+source "$ZSH/script/lib/machine-local.sh"
 
 info() { printf "  [ .. ] %s\n" "$1"; }
 success() { printf "  [ OK ] %s\n" "$1"; }
@@ -94,48 +98,61 @@ if [ "$broken_config" -eq 0 ]; then
   success "no broken ~/.config symlinks into the repo"
 fi
 
-# Mackup (same lookup order as Mackup itself: the ~/.mackup.cfg override
-# wins, the repo-linked XDG config is the default)
+# Mackup picks exactly ONE config file — no merging — in this order:
+# ~/.mackup.cfg, $MACKUP_CONFIG, ~/.config/mackup/mackup.cfg.
 info "checking mackup config..."
-if [ -f "$HOME/.config/mackup/mackup.cfg" ]; then
-  mackup_cfg="$HOME/.config/mackup/mackup.cfg"
-elif [ -f "$HOME/.mackup.cfg" ]; then
-  mackup_cfg="$HOME/.mackup.cfg"
-fi
-if [ -n "${mackup_cfg:-}" ]; then
-  if grep -q '^\[applications_to_sync\]' "$mackup_cfg"; then
-    # The section must have at least one non-comment, non-empty entry
-    # before the next section or EOF.
-    if awk '
-        /^\[applications_to_sync\]/ { seen = 1; next }
-        seen && /^[ \t]*\[/          { exit }
-        seen && /^[ \t]*#/           { next }
-        seen && NF                   { found = 1; exit }
-        END                          { exit (found ? 0 : 1) }
-      ' "$mackup_cfg"; then
-      success "mackup whitelist present"
-    else
-      fail "[applications_to_sync] in $mackup_cfg has no entries — nothing would be backed up; fix the whitelist"
-    fi
-  else
+mackup_cfg=""
+for candidate in "$HOME/.mackup.cfg" "${MACKUP_CONFIG:-}" "$HOME/.config/mackup/mackup.cfg"; do
+  if [ -n "$candidate" ] && [ -f "$candidate" ]; then
+    mackup_cfg="$candidate"
+    break
+  fi
+done
+if [ -n "$mackup_cfg" ]; then
+  # A missing OR empty [applications_to_sync] means "back up everything",
+  # not "back up nothing" — see Mackup's get_apps_to_backup().
+  if ! grep -q '^\[applications_to_sync\]' "$mackup_cfg"; then
     fail "no [applications_to_sync] in $mackup_cfg — Mackup would back up every supported app (incl. ssh/git/zsh) and fight the dotfiles symlinks"
+  elif awk '
+      /^\[applications_to_sync\]/ { seen = 1; next }
+      seen && /^[ \t]*\[/          { exit }
+      seen && /^[ \t]*#/           { next }
+      seen && NF                   { found = 1; exit }
+      END                          { exit (found ? 0 : 1) }
+    ' "$mackup_cfg"; then
+    success "mackup whitelist present ($mackup_cfg)"
+  else
+    fail "[applications_to_sync] in $mackup_cfg is empty — Mackup would back up every supported app (incl. ssh/git/zsh), not nothing"
   fi
   engine="$(sed -n 's/^engine = //p' "$mackup_cfg" | head -n 1)"
-  if [ "$engine" = "file_system" ]; then
+  engine="${engine:-dropbox}"
+  if [ "$engine" != "file_system" ]; then
+    success "mackup storage is handled by Mackup's '$engine' engine"
+  else
     mackup_path="$(sed -n 's/^path = //p' "$mackup_cfg" | head -n 1)"
     mackup_dir="$(sed -n 's/^directory = //p' "$mackup_cfg" | head -n 1)"
     mackup_dir="${mackup_dir:-Mackup}"
     case "$mackup_path" in
-      Library/CloudStorage/*|"$HOME"/Library/CloudStorage/*)
-        success "mackup storage is in a synced folder"
+      ""|.) storage="$HOME/$mackup_dir" ;;
+      /*)   storage="$mackup_path/$mackup_dir" ;;
+      *)    storage="$HOME/$mackup_path/$mackup_dir" ;;
+    esac
+    # A symlinked ~/Mackup is how one shared config points at a per-machine
+    # synced folder. Resolve one level before judging the location.
+    storage_check="$storage"
+    if [ -L "$storage" ]; then
+      storage_link="$(readlink "$storage")"
+      case "$storage_link" in
+        /*) storage_check="$storage_link" ;;
+        *)  storage_check="$(dirname "$storage")/$storage_link" ;;
+      esac
+    fi
+    case "$storage_check" in
+      "$HOME"/Library/CloudStorage/*)
+        success "mackup storage is in a synced folder ($storage_check)"
         ;;
       *)
-        case "$mackup_path" in
-          /*) storage="${mackup_path%/}/$mackup_dir" ;;
-          .) storage="$HOME/$mackup_dir" ;;
-          *) storage="$HOME/$mackup_path/$mackup_dir" ;;
-        esac
-        warn "Mackup storage is local-only — not a real backup ($storage)"
+        warn "Mackup storage is local-only — not a real backup ($storage); point ~/Mackup at a synced folder: ln -s <synced-folder>/Mackup ~/Mackup"
         ;;
     esac
   fi
@@ -188,17 +205,49 @@ else
   fi
 fi
 
-# Machine-local files: present/absent only. Absence is normal for the
-# optional ones, so warn only when it looks like something was lost —
-# never on a machine that simply never configured it.
+# Machine-local files. The backed-up set comes from
+# script/lib/machine-local.sh — the same list 1password/functions.zsh packs,
+# so the two cannot drift. Absence is normal for optional files, so warn
+# only when something looks lost.
 info "checking machine-local files..."
 
-if [ -f "$HOME/.gitconfig.local" ]; then
-  success "present: ~/.gitconfig.local"
-elif [ -L "$HOME/.gitconfig" ]; then
-  warn "missing: ~/.gitconfig.local — this machine ran bootstrap, so the git identity file was probably lost"
-else
-  info "missing: ~/.gitconfig.local (script/bootstrap creates it)"
+present=""
+absent=""
+# SC2154: these three variables are assigned by script/lib/machine-local.sh,
+# which shellcheck cannot follow through the variable-based source path.
+# shellcheck disable=SC2154
+while IFS= read -r rel; do
+  [ -n "$rel" ] || continue
+  if [ -f "$HOME/$rel" ]; then
+    present="$present $rel"
+  else
+    absent="$absent $rel"
+  fi
+done <<<"$dotfiles_backup_files"
+
+# shellcheck disable=SC2154
+while IFS= read -r pattern; do
+  [ -n "$pattern" ] || continue
+  while IFS= read -r f; do
+    [ -f "$f" ] && present="$present ${f#"$HOME/"}"
+  done < <(compgen -G "$HOME/$pattern")
+done <<<"$dotfiles_backup_globs"
+
+if [ -n "$present" ]; then
+  success "backed up by local-backup:${present}"
+fi
+if [ -n "$absent" ]; then
+  info "not set up yet (optional; local-restore restores them):${absent}"
+fi
+
+unbacked=""
+# shellcheck disable=SC2154
+while IFS= read -r rel; do
+  [ -n "$rel" ] || continue
+  [ -f "$HOME/$rel" ] && unbacked="$unbacked $rel"
+done <<<"$dotfiles_unbacked_files"
+if [ -n "$unbacked" ]; then
+  info "machine-local, never backed up:${unbacked} (see README)"
 fi
 
 identity_count=0
@@ -208,43 +257,31 @@ for f in "$HOME"/.gitconfig-*; do
 done
 
 if [ -f "$HOME/.gitconfig.identities" ]; then
-  success "present: ~/.gitconfig.identities"
   identity_refs=0
   while IFS= read -r ref; do
     [ -n "$ref" ] || continue
+    # `path = ~/.gitconfig-x` is valid git syntax; expand before testing.
+    ref="${ref/#\~/$HOME}"
     identity_refs=$((identity_refs + 1))
-    if [ -f "$ref" ]; then
-      success "present: $ref"
-    else
+    if [ ! -f "$ref" ]; then
       warn "missing: $ref (referenced by ~/.gitconfig.identities — commits under that folder silently fall back to the primary identity)"
     fi
   done < <(sed -n 's/^[[:space:]]*path[[:space:]]*=[[:space:]]*//p' "$HOME/.gitconfig.identities")
   [ "$identity_refs" -gt 0 ] || warn "no [includeIf] path entries in ~/.gitconfig.identities"
 elif [ "$identity_count" -gt 0 ]; then
   warn "missing: ~/.gitconfig.identities — $identity_count ~/.gitconfig-* file(s) exist, so the includeIf rules are gone (re-add with bin/git-add-identity)"
-else
-  info "no folder-scoped git identities (optional)"
 fi
 
-if [ -f "$HOME/.localrc" ]; then
-  success "present: ~/.localrc"
-  if grep -Eq '^[[:space:]]*export[[:space:]]+DOTFILES_GROUPS=' "$HOME/.localrc" 2>/dev/null; then
-    warn "DOTFILES_GROUPS still set in ~/.localrc — move the selection to ~/.localgroups so it survives a secrets restore"
-  fi
-else
-  info "missing: ~/.localrc (optional; restored by local-restore or your own password manager)"
+if [ ! -f "$HOME/.gitconfig.local" ] && [ -L "$HOME/.gitconfig" ]; then
+  warn "missing: ~/.gitconfig.local — this machine ran bootstrap, so the git identity file was probably lost"
 fi
 
-if [ -f "$(dotfiles_groups_file)" ]; then
-  success "present: ~/.localgroups"
-else
+if [ -f "$HOME/.localrc" ] && grep -Eq '^[[:space:]]*export[[:space:]]+DOTFILES_GROUPS=' "$HOME/.localrc" 2>/dev/null; then
+  warn "DOTFILES_GROUPS still set in ~/.localrc — move the selection to ~/.localgroups so it survives a secrets restore"
+fi
+
+if [ ! -f "$(dotfiles_groups_file)" ]; then
   info "missing: ~/.localgroups (optional; shared apps only — see system/localgroups.example)"
-fi
-
-if [ -f "$HOME/.ssh/config.local" ]; then
-  success "present: ~/.ssh/config.local"
-else
-  info "missing: ~/.ssh/config.local (optional; restored by local-restore or your own password manager)"
 fi
 
 # Required tools

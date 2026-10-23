@@ -184,14 +184,15 @@ echo ''
 info '  1. Set up 1Password SSH agent:'
 info '     1Password → Settings → Developer → Use the SSH agent'
 info '     Then add your SSH keys in 1Password and copy public keys as needed'
-info '  2. Restore machine-local secrets: local-restore'
+info '  2. Restore machine-local files: local-restore'
 info '     (needs the 1Password CLI; see 1password/functions.zsh)'
 info '  3. Sign in to your sync service, let it finish syncing, then run'
 # Backticks are literal text here; double quotes would command-substitute.
 # shellcheck disable=SC2016
 info '     `mackup restore` to bring back app settings (never `mackup link`)'
-info '  4. Set MesloLGS Nerd Font in your terminal (for Starship prompt icons)'
-info '  5. Run bin/git-add-identity to add git identities (e.g. work)'
+info '  4. Switch the git remote to SSH so dot can pull:'
+info "     git -C $DOTFILES_ROOT remote set-url origin <ssh-url>"
+info '  5. Run dot-doctor to verify links, groups and storage'
 echo ''
 
 if [ "$(uname -s)" == "Darwin" ]

@@ -6,22 +6,18 @@
 
 (( $+commands[op] )) || return
 
-# Machine-local files, relative to $HOME (keep in sync with README).
-typeset -ga _local_backup_files=(
-  .localrc
-  .ssh/config.local
-  .config/1Password/ssh/agent.toml
-  .local/share/atuin/key
-  .gitconfig.identities
-)
+# The file list lives in script/lib/machine-local.sh, shared with
+# bin/dot-doctor so the two cannot drift.
+_machine_local_lib="${${(%):-%x}:A:h:h}/script/lib/machine-local.sh"
+if [[ ! -r $_machine_local_lib ]]; then
+  print -u2 "1password: missing $_machine_local_lib — cannot determine backup targets"
+  return 1
+fi
+source "$_machine_local_lib"
+unset _machine_local_lib
 
-# Also backed up, matched by glob: every folder-scoped identity file
-# (~/.gitconfig-<label>). Labels vary per machine, hence the glob.
-# ~/.gitconfig.local is excluded on purpose — bootstrap regenerates it
-# from the name/email prompt.
-typeset -ga _local_backup_globs=(
-  '.gitconfig-*'
-)
+typeset -ga _local_backup_files=(${=dotfiles_backup_files})
+typeset -ga _local_backup_globs=(${=dotfiles_backup_globs})
 
 # Print existing files matched by $_local_backup_globs, relative to $HOME.
 _local_backup_glob_matches () {
