@@ -30,7 +30,7 @@ Everything is topic-centric. Each folder is a subject area — `git/`, `php/`, `
 - **`topic/config/**`** — symlinked into `~/.config/<topic>/` by `script/bootstrap`
 - **`topic/install.sh`** — run by `script/install` for actual software installation
 - **`bin/`** — scripts added to `$PATH`
-- **`1password/functions.zsh`** — optional `local-backup` / `local-restore` shell functions (see [secrets backup](#secrets-backup-optional-1password)); loaded only when the `op` CLI is installed
+- **`1password/functions.zsh`** — optional `local-backup` / `local-restore` shell functions (see [machine-local backup](#machine-local-backup-optional-1password)); loaded only when the `op` CLI is installed
 
 ## install
 
@@ -120,7 +120,7 @@ These files are per machine and **never committed**:
 | File | Purpose | How it comes back after a reinstall |
 |---|---|---|
 | `~/.gitconfig.local` | Primary git identity (name + email) | `script/bootstrap` prompt |
-| `~/.gitconfig.identities` (+ `~/.gitconfig-*`) | Folder-scoped git identities (`includeIf` rules) | `bin/git-add-identity` |
+| `~/.gitconfig.identities` (+ `~/.gitconfig-*`) | Folder-scoped git identities (`includeIf` rules) | `local-restore` (backed up), or `bin/git-add-identity` |
 | `~/.ssh/config.local` | Machine-specific SSH hosts/overrides | `local-restore`, or your own password manager |
 | `~/.localgroups` | App group for this machine (`work`, `personal`, …) | you create it: `cp system/localgroups.example ~/.localgroups` — **not backed up** |
 | `~/.localrc` | Machine-specific shell config (secrets, env) | `local-restore`, or your own password manager |
@@ -146,9 +146,9 @@ Rules:
 - **Custom apps**: add a `.cfg` under `mackup/config/applications/` in this repo; `script/bootstrap` links it to `~/.config/mackup/applications/` where Mackup picks it up. Paths are relative to `$HOME` (`[configuration_files]`) or to `~/.config` (`[xdg_configuration_files]`). Check `mackup show <app>` to see what will be backed up.
 - **Raycast**: only the plist and plain config files are synced. Raycast's real data (snippets, quicklinks, hotkeys) lives in an encrypted local database that does not restore usefully — for a full backup use Raycast's own **Settings → Advanced → Export** (`.rayconfig` file).
 
-## secrets backup (optional, 1Password)
+## machine-local backup (optional, 1Password)
 
-If the [1Password CLI](https://developer.1password.com/docs/cli/) (`op`) is installed, `1password/functions.zsh` adds two functions for the machine-local secret files from the table above (`~/.localrc`, `~/.ssh/config.local`, `~/.config/1Password/ssh/agent.toml`, the Atuin key):
+If the [1Password CLI](https://developer.1password.com/docs/cli/) (`op`) is installed, `1password/functions.zsh` adds two functions for the machine-local files from the table above (`~/.localrc`, `~/.ssh/config.local`, `~/.config/1Password/ssh/agent.toml`, the Atuin key, and the git identity files `~/.gitconfig.identities` + `~/.gitconfig-<label>`):
 
 ```sh
 local-backup            # pack existing files into one tgz Document in 1Password
@@ -158,7 +158,8 @@ local-restore "dotfiles: other-machine"   # restore another machine's backup
 
 - The Document is titled `dotfiles: <hostname>`; override with `DOTFILES_BACKUP_NAME`.
 - `~/.localgroups` is deliberately **not** in the bundle: it is not a secret, and `op` only exists after bootstrap has already run — so the group's apps could never be installed from a restore. Create it by hand before bootstrap.
-- Restored secret files are chmod 600. `local-restore` never overwrites existing files (`tar -k`) — move them aside first.
+- `~/.gitconfig.local` is deliberately **not** in the bundle either: `script/bootstrap` regenerates it from the name/email prompt.
+- Restored files are chmod 600. `local-restore` never overwrites existing files (`tar -k`) — move them aside first.
 - Without 1Password, back up those files yourself (password manager, encrypted archive, …).
 - **Secrets never go into Mackup** — the Mackup whitelist deliberately excludes ssh, git and shell configs.
 
@@ -172,7 +173,7 @@ To add a folder-scoped identity (e.g. different author for work projects):
 bin/git-add-identity
 ```
 
-This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gitconfig.identities`, so commits under that folder automatically use the right identity. The script refuses duplicate labels and non-existent folders — both would otherwise fail silently.
+This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gitconfig.identities`, so commits under that folder automatically use the right identity. The script refuses duplicate labels and non-existent folders — both would otherwise fail silently. Both files are included in `local-backup`, so a reinstall gets them back.
 
 > **Note**: this scopes *commit authorship* (name/email), not SSH authentication or signing. If your identities use different SSH keys in 1Password, select the right key per host in `~/.ssh/config.local`.
 
@@ -180,7 +181,7 @@ This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gi
 
 1. Install Xcode Command Line Tools / clone the repo (see [install](#install)), create `~/.localgroups` for this machine, then run `script/bootstrap` — it prompts for your git identity, symlinks everything, asks where Mackup should store backups, and installs Homebrew + the Brewfile and the selected app group
 2. Open 1Password (installed by the Brewfile), sign in, and enable the SSH agent and CLI integration: Settings → Developer → *Use the SSH agent* + *Connect with 1Password CLI*
-3. `local-restore` — brings back `~/.localrc`, `~/.ssh/config.local`, the 1Password agent config and the Atuin key (needs step 2's CLI integration). If you did **not** create `~/.localgroups` before bootstrap, or want to change groups, create/edit it and run `dot` to install them
+3. `local-restore` — brings back `~/.localrc`, `~/.ssh/config.local`, the 1Password agent config, the Atuin key and the git identity files (needs step 2's CLI integration). If you did **not** create `~/.localgroups` before bootstrap, or want to change groups, create/edit it and run `dot` to install them
 4. Sign in to your sync service (the Mackup storage folder), let it finish syncing, then run `mackup restore` — never `mackup link`
 5. `atuin login` — the encryption key came back in step 3, so history sync just works
 6. `pre-commit install` — enable the local lint hooks
