@@ -3,7 +3,7 @@ cask_args appdir: '/Applications'
 
 # Machine-specific apps live in Brewfile.<group> (e.g. Brewfile.work,
 # Brewfile.personal) and are installed when the group is listed in
-# ~/.localgroups — see README "app groups".
+# ~/.localgroups - see README "app groups".
 
 # Third-party taps
 tap 'anomalyco/tap'            # opencode

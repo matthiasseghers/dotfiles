@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# check-brewfile-entries — verify every Brewfile entry still exists upstream.
+# check-brewfile-entries - verify every Brewfile entry still exists upstream.
 #
 # HTTP-only (no brew required):
 #   brew 'name'          → https://formulae.brew.sh/api/formula/<name>.json
 #   cask 'name'          → https://formulae.brew.sh/api/cask/<name>.json
 #   brew 'user/tap/name' → the tap repo via the GitHub API. Name-level
 #                          existence inside third-party taps is NOT checkable
-#                          via formulae.brew.sh — only the tap repo is verified.
+#                          via formulae.brew.sh - only the tap repo is verified.
 #   tap 'user/repo'      → https://api.github.com/repos/<user>/homebrew-<repo>
 #                          (homebrew/x resolves to Homebrew/homebrew-x; the
 #                          GitHub API matches owners case-insensitively)

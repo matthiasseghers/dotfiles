@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# git-add-identity — add a folder-scoped git identity
+# git-add-identity - add a folder-scoped git identity
 #
 # Usage: git-add-identity
 #
@@ -19,7 +19,7 @@ fi
 printf "Label (e.g. work): "
 read -r label
 
-# Guard against duplicate labels — a second [includeIf] for the same label
+# Guard against duplicate labels - a second [includeIf] for the same label
 # would silently win and orphan the first identity file
 if [ -f "$HOME/.gitconfig-$label" ] || grep -q "gitconfig-$label" "$GITCONFIG_IDENTITIES" 2>/dev/null; then
   echo "Error: identity '$label' already exists (~/.gitconfig-$label)."
@@ -40,7 +40,7 @@ read -r folder
 folder="${folder/#\~/$HOME}"
 folder="${folder%/}/"
 
-# A typo'd path means the identity silently never applies — git does not
+# A typo'd path means the identity silently never applies - git does not
 # warn about [includeIf] blocks that match nothing
 if [ ! -d "$folder" ]; then
   echo "Error: folder '$folder' does not exist."

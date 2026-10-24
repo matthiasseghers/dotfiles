@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# gitsum — git repo status summary
+# gitsum - git repo status summary
 
 set -euo pipefail
 

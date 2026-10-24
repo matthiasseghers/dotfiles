@@ -1,8 +1,8 @@
 cask_args appdir: '/Applications'
 
-# Work group — installed when ~/.localgroups lists "work".
+# Work group - installed when ~/.localgroups lists "work".
 # Never add apps installed by company device management (MDM) here,
-# e.g. Company Portal, FortiClient, Microsoft Defender — brew would
+# e.g. Company Portal, FortiClient, Microsoft Defender - brew would
 # fight the managed installs.
 
 # Third-party taps

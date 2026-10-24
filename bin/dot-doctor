@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# dot-doctor — diagnose dotfiles health after install or periodically.
+# dot-doctor - diagnose dotfiles health after install or periodically.
 # Usage: dot-doctor
 
 set -euo pipefail
@@ -8,7 +8,7 @@ set -euo pipefail
 ZSH="${ZSH:-$(cd "$(dirname "$0")/.." && pwd -P)}"
 fail=0
 
-# App groups (Brewfile.<group>) — shared parsing with script/install.
+# App groups (Brewfile.<group>) - shared parsing with script/install.
 # Exported: script/lib/groups.sh reads $DOTFILES_ROOT when sourced.
 export DOTFILES_ROOT="$ZSH"
 # app-group parsing (script/lib/groups.sh reads $DOTFILES_ROOT when sourced)
@@ -18,11 +18,14 @@ source "$ZSH/script/lib/groups.sh"
 # shellcheck source=script/lib/machine-local.sh
 # shellcheck disable=SC1091
 source "$ZSH/script/lib/machine-local.sh"
+# Shared colored tags ([ .. ] [ OK ] [WARN]); plain when piped (no TTY).
+# shellcheck source=script/lib/output.sh
+# shellcheck disable=SC1091
+source "$ZSH/script/lib/output.sh"
 
-info() { printf "  [ .. ] %s\n" "$1"; }
-success() { printf "  [ OK ] %s\n" "$1"; }
-warn() { printf "  [WARN] %s\n" "$1"; }
-fail() { printf "  [FAIL] %s\n" "$1"; fail=1; }
+# output.sh's fail() exits at the first failure; the doctor records each one
+# instead, keeps running every check, and decides the exit code at the end.
+fail() { printf "  [%sFAIL%s] %s\n" "$C_FAIL" "$C_RESET" "$1"; fail=1; }
 
 echo "› dotfiles root: $ZSH"
 echo ""
@@ -98,7 +101,7 @@ if [ "$broken_config" -eq 0 ]; then
   success "no broken ~/.config symlinks into the repo"
 fi
 
-# Mackup picks exactly ONE config file — no merging — in this order:
+# Mackup picks exactly ONE config file - no merging - in this order:
 # ~/.mackup.cfg, $MACKUP_CONFIG, ~/.config/mackup/mackup.cfg.
 info "checking mackup config..."
 mackup_cfg=""
@@ -110,9 +113,9 @@ for candidate in "$HOME/.mackup.cfg" "${MACKUP_CONFIG:-}" "$HOME/.config/mackup/
 done
 if [ -n "$mackup_cfg" ]; then
   # A missing OR empty [applications_to_sync] means "back up everything",
-  # not "back up nothing" — see Mackup's get_apps_to_backup().
+  # not "back up nothing" - see Mackup's get_apps_to_backup().
   if ! grep -q '^\[applications_to_sync\]' "$mackup_cfg"; then
-    fail "no [applications_to_sync] in $mackup_cfg — Mackup would back up every supported app (incl. ssh/git/zsh) and fight the dotfiles symlinks"
+    fail "no [applications_to_sync] in $mackup_cfg - Mackup would back up every supported app (incl. ssh/git/zsh) and fight the dotfiles symlinks"
   elif awk '
       /^\[applications_to_sync\]/ { seen = 1; next }
       seen && /^[ \t]*\[/          { exit }
@@ -122,7 +125,7 @@ if [ -n "$mackup_cfg" ]; then
     ' "$mackup_cfg"; then
     success "mackup whitelist present ($mackup_cfg)"
   else
-    fail "[applications_to_sync] in $mackup_cfg is empty — Mackup would back up every supported app (incl. ssh/git/zsh), not nothing"
+    fail "[applications_to_sync] in $mackup_cfg is empty - Mackup would back up every supported app (incl. ssh/git/zsh), not nothing"
   fi
   engine="$(sed -n 's/^engine = //p' "$mackup_cfg" | head -n 1)"
   engine="${engine:-dropbox}"
@@ -152,12 +155,12 @@ if [ -n "$mackup_cfg" ]; then
         success "mackup storage is in a synced folder ($storage_check)"
         ;;
       *)
-        warn "Mackup storage is local-only — not a real backup ($storage); point ~/Mackup at a synced folder: ln -s <synced-folder>/Mackup ~/Mackup"
+        warn "Mackup storage is local-only - not a real backup ($storage); point ~/Mackup at a synced folder: ln -s <synced-folder>/Mackup ~/Mackup"
         ;;
     esac
   fi
 else
-  warn "no mackup config found — the ~/.config/mackup/mackup.cfg link is missing (script/bootstrap creates it)"
+  warn "no mackup config found - the ~/.config/mackup/mackup.cfg link is missing (script/bootstrap creates it)"
 fi
 
 # App groups (~/.localgroups → Brewfile.<group>)
@@ -173,7 +176,7 @@ case "$groups_source" in
     # Compare as sets: the same groups in a different order are not a conflict.
     if [ -n "$from_file" ] && [ "$(printf '%s\n' "$from_file" | sort)" != "$(printf '%s\n' "$requested" | sort)" ]; then
       file_line="$(printf '%s' "$from_file" | tr '\n' ' ' | sed -e 's/ *$//')"
-      warn "selection in ~/.localgroups is '$file_line' — the environment override wins for this run"
+      warn "selection in ~/.localgroups is '$file_line' - the environment override wins for this run"
     fi
     ;;
   file)
@@ -185,7 +188,7 @@ case "$groups_source" in
 esac
 
 if [ -z "$requested" ]; then
-  warn "no app group selected — installing shared apps only (available: $available; create ~/.localgroups — see system/localgroups.example)"
+  warn "no app group selected - installing shared apps only (available: $available; create ~/.localgroups - see system/localgroups.example)"
 else
   unknown="$(dotfiles_unknown_groups)"
   if [ -n "$unknown" ]; then
@@ -206,7 +209,7 @@ else
 fi
 
 # Machine-local files. The backed-up set comes from
-# script/lib/machine-local.sh — the same list 1password/functions.zsh packs,
+# script/lib/machine-local.sh - the same list 1password/functions.zsh packs,
 # so the two cannot drift. Absence is normal for optional files, so warn
 # only when something looks lost.
 info "checking machine-local files..."
@@ -264,24 +267,24 @@ if [ -f "$HOME/.gitconfig.identities" ]; then
     ref="${ref/#\~/$HOME}"
     identity_refs=$((identity_refs + 1))
     if [ ! -f "$ref" ]; then
-      warn "missing: $ref (referenced by ~/.gitconfig.identities — commits under that folder silently fall back to the primary identity)"
+      warn "missing: $ref (referenced by ~/.gitconfig.identities - commits under that folder silently fall back to the primary identity)"
     fi
   done < <(sed -n 's/^[[:space:]]*path[[:space:]]*=[[:space:]]*//p' "$HOME/.gitconfig.identities")
   [ "$identity_refs" -gt 0 ] || warn "no [includeIf] path entries in ~/.gitconfig.identities"
 elif [ "$identity_count" -gt 0 ]; then
-  warn "missing: ~/.gitconfig.identities — $identity_count ~/.gitconfig-* file(s) exist, so the includeIf rules are gone (re-add with bin/git-add-identity)"
+  warn "missing: ~/.gitconfig.identities - $identity_count ~/.gitconfig-* file(s) exist, so the includeIf rules are gone (re-add with bin/git-add-identity)"
 fi
 
 if [ ! -f "$HOME/.gitconfig.local" ] && [ -L "$HOME/.gitconfig" ]; then
-  warn "missing: ~/.gitconfig.local — this machine ran bootstrap, so the git identity file was probably lost"
+  warn "missing: ~/.gitconfig.local - this machine ran bootstrap, so the git identity file was probably lost"
 fi
 
 if [ -f "$HOME/.localrc" ] && grep -Eq '^[[:space:]]*export[[:space:]]+DOTFILES_GROUPS=' "$HOME/.localrc" 2>/dev/null; then
-  warn "DOTFILES_GROUPS still set in ~/.localrc — move the selection to ~/.localgroups so it survives a secrets restore"
+  warn "DOTFILES_GROUPS still set in ~/.localrc - move the selection to ~/.localgroups so it survives a secrets restore"
 fi
 
 if [ ! -f "$(dotfiles_groups_file)" ]; then
-  info "missing: ~/.localgroups (optional; shared apps only — see system/localgroups.example)"
+  info "missing: ~/.localgroups (optional; shared apps only - see system/localgroups.example)"
 fi
 
 # Required tools

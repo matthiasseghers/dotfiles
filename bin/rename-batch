@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# rename-batch — bulk rename files using find-and-replace on filenames
+# rename-batch - bulk rename files using find-and-replace on filenames
 # Usage: rename-batch <find> <replace> [directory]
 
 set -euo pipefail

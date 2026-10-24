@@ -15,7 +15,7 @@ concurrency:
 jobs:
   smoke:
     runs-on: ${{ matrix.runner }}
-    # Private repos bill macOS runners at 10x — auto-skip; manual workflow_dispatch overrides (deliberate cost acceptance).
+    # Private repos bill macOS runners at 10x - auto-skip; manual workflow_dispatch overrides (deliberate cost acceptance).
     if: github.event_name == 'workflow_dispatch' || github.event.repository.private == false
     timeout-minutes: 20
 

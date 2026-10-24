@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# check-brewfile-duplicates — assert that every brew/cask entry lives in
+# check-brewfile-duplicates - assert that every brew/cask entry lives in
 # exactly one Brewfile* in the repo root.
 #
 # Why: apps are split across a shared Brewfile plus optional
@@ -54,7 +54,7 @@ fi
 
 while IFS=$'\t' read -r type name; do
   [ -n "$type" ] || continue
-  echo "duplicate $type '$name' — each brew/cask may appear in only one Brewfile:" >&2
+  echo "duplicate $type '$name' - each brew/cask may appear in only one Brewfile:" >&2
   printf '%s\n' "$entries" \
     | awk -F'\t' -v t="$type" -v n="$name" '$1 == t && $2 == n { print "  " $3 }' >&2
 done <<<"$duplicates"

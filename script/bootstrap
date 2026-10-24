@@ -12,6 +12,7 @@ set -o pipefail
 
 echo ''
 
+# shellcheck source=script/lib/output.sh
 # shellcheck disable=SC1091
 source "$DOTFILES_ROOT/script/lib/output.sh"
 
@@ -205,6 +206,6 @@ then
   then
     sudo shutdown -r now
   else
-    info 'Restart skipped — remember to restart later for all settings to apply.'
+    info 'Restart skipped - remember to restart later for all settings to apply.'
   fi
 fi

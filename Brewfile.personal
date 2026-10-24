@@ -1,6 +1,6 @@
 cask_args appdir: '/Applications'
 
-# Personal group — installed when ~/.localgroups lists "personal".
+# Personal group - installed when ~/.localgroups lists "personal".
 
 # Apps
 cask 'pcsx2'
@@ -18,4 +18,4 @@ cask 'brave-browser'
 cask 'highball'
 
 # No Homebrew cask (install manually):
-# - DuckStation (https://duckstation.org — installs DuckStation.app)
+# - DuckStation (https://duckstation.org - installs DuckStation.app)

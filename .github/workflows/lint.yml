@@ -33,7 +33,7 @@ jobs:
           key: pre-commit-${{ runner.os }}-${{ hashFiles('**/.pre-commit-config.yaml') }}
 
       # The gitleaks hook only scans staged changes (`gitleaks git
-      # --pre-commit --staged`), which is always empty on CI — skip it here
+      # --pre-commit --staged`), which is always empty on CI - skip it here
       # and run a full-repo detect in the dedicated step below.
       - name: Run pre-commit
         run: SKIP=gitleaks pre-commit run --all-files

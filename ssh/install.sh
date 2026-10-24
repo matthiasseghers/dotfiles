@@ -3,6 +3,7 @@
 # Symlink ssh/config to ~/.ssh/config
 
 DOTFILES_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+# shellcheck source=script/lib/output.sh
 # shellcheck disable=SC1091
 source "$DOTFILES_ROOT/script/lib/output.sh"
 

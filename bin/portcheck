@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# portcheck — show listening ports or what owns a specific port (macOS)
+# portcheck - show listening ports or what owns a specific port (macOS)
 # Usage: portcheck [port]
 
 set -euo pipefail

@@ -10,6 +10,8 @@ set -euo pipefail
 
 echo ''
 
+# shellcheck source=script/lib/output.sh
+# shellcheck disable=SC1091
 source "$DOTFILES_ROOT/script/lib/output.sh"
 
 info "Removing dotfile symlinks from $HOME"

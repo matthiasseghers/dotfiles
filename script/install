@@ -6,8 +6,10 @@ set -e
 
 cd "$(dirname "$0")"/..  
 
-# App groups (Brewfile.<group>) — see README "app groups".
+# App groups (Brewfile.<group>) - see README "app groups".
 DOTFILES_ROOT="$(pwd -P)"
+# shellcheck source=script/lib/groups.sh
+# shellcheck disable=SC1091
 source "$DOTFILES_ROOT/script/lib/groups.sh"
 
 available="$(dotfiles_available_groups_line)"
@@ -29,7 +31,7 @@ if [ -n "$unknown" ]; then
 fi
 
 if [ -z "$requested" ]; then
-  echo "› no app group selected — installing shared apps only (available: $available; create ~/.localgroups to install one)"
+  echo "› no app group selected - installing shared apps only (available: $available; create ~/.localgroups to install one)"
 fi
 
 echo "› brew bundle"
