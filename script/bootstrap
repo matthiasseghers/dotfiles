@@ -16,6 +16,19 @@ echo ''
 # shellcheck disable=SC1091
 source "$DOTFILES_ROOT/script/lib/output.sh"
 
+# Arch detection plus the group helpers (the Intel dependency branch needs both).
+if [ -f "$DOTFILES_ROOT/script/lib/legacy-intel.sh" ]; then
+  # shellcheck source=script/lib/legacy-intel.sh
+  # shellcheck disable=SC1091
+  source "$DOTFILES_ROOT/script/lib/legacy-intel.sh"
+fi
+
+if [ -f "$DOTFILES_ROOT/script/lib/groups.sh" ]; then
+  # shellcheck source=script/lib/groups.sh
+  # shellcheck disable=SC1091
+  source "$DOTFILES_ROOT/script/lib/groups.sh"
+fi
+
 setup_gitconfig () {
   if ! [ -f git/gitconfig.local.symlink ]
   then
@@ -133,6 +146,26 @@ install_config_files () {
   done < <(find -H "$DOTFILES_ROOT" -mindepth 3 -type f -path '*/config/*' -not -path '*/.git/*' -not -name '*.symlink' -not -name '.DS_Store')
 }
 
+# MacPorts has no cask equivalent: on Intel, print the cask entries from the
+# shared Brewfile and every selected group so they can be installed by hand.
+print_cask_checklist () {
+  local file g line
+  info 'GUI apps to install by hand (cask entries from the Brewfiles):'
+
+  while IFS= read -r line; do
+    info "  $line"
+  done < <(grep -h '^cask ' "$DOTFILES_ROOT/Brewfile" 2>/dev/null || true)
+
+  while IFS= read -r g; do
+    [ -n "$g" ] || continue
+    file="$DOTFILES_ROOT/Brewfile.$g"
+    [ -f "$file" ] || continue
+    while IFS= read -r line; do
+      info "  $line"
+    done < <(grep -h '^cask ' "$file" 2>/dev/null || true)
+  done < <(dotfiles_requested_groups)
+}
+
 setup_gitconfig
 overwrite_all=false
 backup_all=false
@@ -168,12 +201,25 @@ then
   fi
 
   info "installing dependencies"
-  # shellcheck disable=SC1091 # bin/dot is linted on its own; staged runs exclude it from shellcheck's input
-  if source bin/dot | while read -r data; do info "$data"; done
-  then
-    success "dependencies installed"
+  if [ "${DOTFILES_LEGACY_INTEL:-0}" = "1" ] && ! command -v port >/dev/null 2>&1; then
+    info "MacPorts is not installed. Install it, then re-run bootstrap:"
+    info "  1. Download and install MacPorts: https://www.macports.org/install.php"
+    info "  2. Re-run script/bootstrap (it installs the Portsfile and the selected group)"
+    info "  3. composer: official phar into ~/.local/bin (https://getcomposer.org/download/)"
+    info "  4. op: 1Password CLI standalone from https://developer.1password.com/docs/cli/"
+    info "  5. GUI apps: install the cask entries listed below by hand"
+    print_cask_checklist
   else
-    fail "error installing dependencies"
+    # shellcheck disable=SC1091 # bin/dot is linted on its own; staged runs exclude it from shellcheck's input
+    if source bin/dot | while read -r data; do info "$data"; done
+    then
+      success "dependencies installed"
+    else
+      fail "error installing dependencies"
+    fi
+    if [ "${DOTFILES_LEGACY_INTEL:-0}" = "1" ]; then
+      print_cask_checklist
+    fi
   fi
 fi
 

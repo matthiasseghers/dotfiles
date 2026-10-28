@@ -41,6 +41,16 @@ done
 ZSH="$(cd "$( dirname "$parentDirectory" )" && pwd -P)"
 export ZSH
 
+DOTFILES_ROOT="$ZSH"
+export DOTFILES_ROOT
+
+# Arch detection + the Portsfile installer; a missing file disables Intel support.
+if [ -f "$DOTFILES_ROOT/script/lib/legacy-intel.sh" ]; then
+  # shellcheck source=script/lib/legacy-intel.sh
+  # shellcheck disable=SC1091
+  . "$DOTFILES_ROOT/script/lib/legacy-intel.sh"
+fi
+
 # Update dotfiles themselves
 if git -C "$ZSH" remote get-url origin 2>/dev/null | grep -q '^https://'; then
 	echo "› git pull skipped (remote is HTTPS - switch to SSH: git remote set-url origin git@github.com:USER/dotfiles.git)"
@@ -51,25 +61,41 @@ else
 	echo "› git pull skipped (uncommitted changes in dotfiles repo)"
 fi
 
-# Install homebrew
-"$ZSH"/homebrew/install.sh 2>&1
+if [ "${DOTFILES_LEGACY_INTEL:-0}" = "1" ]; then
+  # Legacy Intel: Homebrew no longer builds bottles, so MacPorts owns the CLI
+  # tools. No exit here: script/bootstrap sources this file inside a pipe.
+  if command -v port >/dev/null 2>&1; then
+    echo "› port selfupdate"
+    sudo port selfupdate
 
-# install.sh runs in a child process, so its shellenv eval does not reach us.
-# If brew is still not on PATH, load it for this process (Apple Silicon first).
-if ! command -v brew >/dev/null 2>&1; then
-  if [ -x /opt/homebrew/bin/brew ]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  elif [ -x /usr/local/bin/brew ]; then
-    eval "$(/usr/local/bin/brew shellenv)"
+    echo "› port upgrade outdated"
+    sudo port upgrade outdated
+
+    dotfiles_intel_install_ports
+  else
+    echo "› MacPorts not installed - install it from https://www.macports.org/install.php and re-run dot"
   fi
+else
+  # Install homebrew
+  "$ZSH"/homebrew/install.sh 2>&1
+
+  # install.sh runs in a child process, so its shellenv eval does not reach us.
+  # If brew is still not on PATH, load it for this process (Apple Silicon first).
+  if ! command -v brew >/dev/null 2>&1; then
+    if [ -x /opt/homebrew/bin/brew ]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [ -x /usr/local/bin/brew ]; then
+      eval "$(/usr/local/bin/brew shellenv)"
+    fi
+  fi
+
+  # Upgrade homebrew
+  echo "› brew update"
+  brew update
+
+  echo "› brew upgrade"
+  brew upgrade --no-ask
 fi
-
-# Upgrade homebrew
-echo "› brew update"
-brew update
-
-echo "› brew upgrade"
-brew upgrade
 
 # Install software
 echo "› script/install"

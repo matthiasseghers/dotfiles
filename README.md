@@ -7,13 +7,23 @@ Personal dotfiles for a Python development environment on macOS (PHP tooling liv
 
 ## what this assumes
 
-- **macOS**, Apple Silicon or Intel (the Homebrew prefix is detected, not assumed), with Xcode Command Line Tools
+- **macOS**, Apple Silicon or Intel, with Xcode Command Line Tools. Apple Silicon runs Homebrew end to end; legacy Intel Macs use MacPorts for CLI tools ([details below](#intel-macs))
 - **zsh** as the login shell
 - **1Password** is recommended but optional: it provides the SSH agent and, with the CLI, `local-backup` / `local-restore`. Without it you need another password manager for the machine-local files below
 - **`sudo`** during bootstrap: applying security defaults and fixing the hostname need admin rights
 - **Consent to macOS defaults**: `macos/set-defaults.sh` changes Finder, Dock, keyboard and trackpad settings; `macos/set-security-defaults.sh` requires a password immediately after screen lock
 
-CI runs lint on every push and a clean `brew bundle` install on a macOS runner monthly (`.github/workflows/`). That proves the repo is coherent - not that it fits your machine.
+### Intel Macs
+
+Homebrew stopped Intel bottle builds, so a legacy Intel Mac runs CLI tools through MacPorts and has no brew install:
+
+- **Apple Silicon**: full Homebrew automation through the Brewfiles.
+- **Intel**: MacPorts owns the CLI tools listed in `Portsfile`; the Brewfiles stay the app/cask source of truth. `dot` runs `sudo port selfupdate`, `sudo port upgrade outdated`, then installs any new `Portsfile` entries - a sudo prompt is expected.
+- **Wiped Intel Mac**: install MacPorts from [macports.org](https://www.macports.org/install.php), run `dot`, then add what the Portsfile cannot carry: `composer` (official phar into `~/.local/bin`), the 1Password CLI (`op`, standalone) and the GUI apps (`script/bootstrap` prints the cask checklist).
+- `spaceman-diff` has no port, so its git image-diff driver errors on Intel - accepted limitation.
+- When adding or removing a brew formula on Apple Silicon, glance at `Portsfile`: it mirrors the shared `Brewfile` by hand, with no automated checker.
+
+CI runs lint and smoke checks on every push (including an Intel macOS runner) and a clean `brew bundle` install on an Apple Silicon runner monthly (`.github/workflows/`). That proves the repo is coherent - not that it fits your machine.
 
 ## stack
 
@@ -47,6 +57,9 @@ Not every tool follows the `~/.config` convention. SSH expects its config outsid
 
 ## install
 
+> [!IMPORTANT]
+> **On an Intel Mac?** Homebrew is not used there: CLI tools come from MacPorts via [`Portsfile`](Portsfile), and `sudo` prompts are expected during install and updates (GUI apps are installed by hand from a checklist `script/bootstrap` prints). See [Intel Macs](#intel-macs).
+
 ```sh
 git clone https://github.com/matthiasseghers/dotfiles.git ~/dotfiles
 cd ~/dotfiles
@@ -65,7 +78,7 @@ Create `~/.localgroups` **before** the first bootstrap: it is what tells `script
 1. Prompt for your primary git identity (name + email → `~/.gitconfig.local`)
 2. Symlink every `*.symlink` file into `$HOME` and every `topic/config/**` file into `~/.config/` - if a target already exists it asks `[s]kip / [o]verwrite / [b]ackup` (`b` moves the old file to `<name>.backup`)
 3. Apply macOS defaults (some need `sudo`), apply security defaults, and fix a hostname macOS mangled - it does **not** prompt for a hostname
-4. Install Homebrew and all packages from `Brewfile` plus the app group selected in `~/.localgroups`, then ask whether to restart
+4. Install dependencies - Homebrew and everything from `Brewfile` plus the app group selected in `~/.localgroups` on Apple Silicon; on Intel, print the manual MacPorts order and the cask checklist instead - then ask whether to restart
 
 > **After bootstrap, switch the remote to SSH.** `dot` only auto-pulls SSH remotes, so the HTTPS clone above never updates itself:
 > ```sh
@@ -77,7 +90,7 @@ Create `~/.localgroups` **before** the first bootstrap: it is what tells `script
 
 ## after a fresh install
 
-1. Install Xcode Command Line Tools / clone the repo (see [install](#install)), create `~/.localgroups` for this machine, then run `script/bootstrap` - it prompts for your git identity, symlinks everything, applies macOS defaults, and installs Homebrew + the Brewfile and the selected app group
+1. Install Xcode Command Line Tools / clone the repo (see [install](#install)), create `~/.localgroups` for this machine, then run `script/bootstrap` - it prompts for your git identity, symlinks everything, applies macOS defaults, and installs dependencies (Homebrew + the Brewfile and the selected app group on Apple Silicon; the MacPorts manual order on Intel)
 2. Open 1Password (installed by the Brewfile), sign in, and enable the SSH agent and CLI integration: Settings → Developer → *Use the SSH agent* + *Connect with 1Password CLI*
 3. `local-restore` - brings back the 1Password bundle: `~/.localrc`, the SSH overrides, the agent config, the Atuin key and the git identity files (needs step 2's CLI integration). If you did **not** create `~/.localgroups` before bootstrap, or want to change groups, create/edit it and run `dot` to install them
 4. Switch the git remote to SSH so `dot` can pull (see [install](#install))
@@ -103,7 +116,7 @@ Run `dot` periodically (it's on your `$PATH` via `bin/`):
 dot
 ```
 
-This pulls the dotfiles repo (skipped if you have uncommitted changes **or if the remote is HTTPS** - see [install](#install)), runs `brew update && brew upgrade`, and installs anything new from the `Brewfile`, the group selected in `~/.localgroups`, and the `topic/install.sh` scripts. `dot -e` opens the dotfiles directory in your editor.
+This pulls the dotfiles repo (skipped if you have uncommitted changes **or if the remote is HTTPS** - see [install](#install)), updates the package manager (Apple Silicon: `brew update && brew upgrade --no-ask`; Intel: `sudo port selfupdate && sudo port upgrade outdated`), and installs anything new from the `Brewfile` and the group selected in `~/.localgroups` on Apple Silicon, or from `Portsfile` on Intel, plus the `topic/install.sh` scripts. `dot -e` opens the dotfiles directory in your editor.
 
 ## app groups
 

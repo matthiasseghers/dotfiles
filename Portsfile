@@ -1,0 +1,32 @@
+# MacPorts ports for legacy Intel Macs — mirror of the shared Brewfile
+# formulae. When you add/remove a brew formula on silicon, glance here too.
+# Names verified against ports.macports.org Tahoe x86_64 archives, 2026-10-27.
+atuin
+fzf
+starship
+zoxide
+zsh-autosuggestions
+zsh-syntax-highlighting
+bat
+fd
+gh
+git-lfs
+lazygit
+mise
+pre-commit
+ripgrep
+yq
+btop
+wget
+ImageMagick
+cloudflared
+ctop
+git-delta        # brew name: delta
+opencode         # brew name: anomalyco/tap/opencode-v2
+# no Tahoe archive yet, cheap source builds (seconds–minutes):
+eza
+grc
+mackup
+yt-dlp
+# NOT here: composer (no port — official phar into ~/.local/bin),
+#           spaceman-diff (no port — dropped on Intel)

@@ -11,8 +11,14 @@ alias cleanup='find . -name "*.DS_Store" -delete && echo "Cleaned .DS_Store file
 alias showfiles='defaults write com.apple.finder AppleShowAllFiles YES && killall Finder'
 alias hidefiles='defaults write com.apple.finder AppleShowAllFiles NO && killall Finder'
 
-# Update all Homebrew packages
-alias brewup='brew update && brew upgrade && brew cleanup'
+# Update all Homebrew packages (MacPorts on legacy Intel)
+brewup() {
+  if [[ -x /opt/local/bin/port ]]; then
+    sudo port selfupdate && sudo port upgrade outdated
+  else
+    brew update && brew upgrade && brew cleanup
+  fi
+}
 
 # Toggle SSH (remote login)
 alias sshon="sudo systemsetup -setremotelogin on"

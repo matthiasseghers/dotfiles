@@ -23,8 +23,6 @@ jobs:
         include:
           - runner: macos-latest
             arch: arm64
-          - runner: macos-26-intel
-            arch: x86_64
           # Uncomment when GitHub publishes the next-macOS beta image.
           # Keep continue-on-error until the image is GA, then remove the flag.
           # - runner: macos-27
