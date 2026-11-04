@@ -29,7 +29,7 @@ jobs:
           #   continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # bootstrap's final restart prompt hits EOF and exits 1 under set -e
       # AFTER completing all work, so the "All installed!" marker is the
@@ -38,6 +38,8 @@ jobs:
         run: |
           export HOME="$RUNNER_TEMP/sandbox-home"
           mkdir -p "$HOME"
+          # a real Mac home always has ~/Library; macos/set-defaults.sh chflags needs it
+          mkdir -p "$HOME/Library"
           export HOMEBREW_NO_AUTO_UPDATE=1
           export HOMEBREW_NO_INSTALL_CLEANUP=1
           printf 'CI Author\nci@example.com\n' | script/bootstrap > "$RUNNER_TEMP/bootstrap.log" 2>&1 || true

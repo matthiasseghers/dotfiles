@@ -51,6 +51,6 @@ defaults write com.apple.finder ShowPathbar -bool true
 # Search the current folder by default in Finder.
 defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
 
-# Apply changes
-killall Dock
-killall Finder
+# Apply changes (best-effort: Dock/Finder may not be running, e.g. in CI)
+killall Dock || true
+killall Finder || true
