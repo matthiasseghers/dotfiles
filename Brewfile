@@ -5,9 +5,6 @@ cask_args appdir: '/Applications'
 # Brewfile.personal) and are installed when the group is listed in
 # ~/.localgroups - see README "app groups".
 
-# Third-party taps
-tap 'anomalyco/tap'            # opencode
-
 # Shell
 brew 'atuin'
 brew 'fzf'
@@ -26,7 +23,7 @@ brew 'mise'
 brew 'pre-commit'
 brew 'ripgrep'
 brew 'yq'
-brew 'anomalyco/tap/opencode-v2', trusted: true
+brew 'opencode'
 
 # File & system utilities
 brew 'btop'
