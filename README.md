@@ -86,7 +86,7 @@ Create `~/.localgroups` **before** the first bootstrap: it is what tells `script
 > ```
 > Do this once the 1Password SSH agent works ([step 2](#after-a-fresh-install)) - a fresh Mac has no key yet, which is why the clone is HTTPS.
 
-> **Fresh-install caveat**: the `work` group taps `nicoverbruggen/cask` (for PHP Monitor), which Homebrew treats as an untrusted third-party tap. If `brew bundle` refuses the `phpmon` cask, run `brew trust nicoverbruggen/cask` once and re-run.
+> **Fresh-install caveat**: third-party tap entries (`anomalyco/tap/opencode-v2`, the `work` group's `phpmon`) declare `trusted: true` in their Brewfiles - since Homebrew 6.0, `brew bundle` refuses formulae and casks from taps you have not trusted, and the declaration grants formula-level trust automatically. Trust stays narrow: other items from those taps still need their own trust.
 
 ## after a fresh install
 

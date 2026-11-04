@@ -26,7 +26,7 @@ brew 'mise'
 brew 'pre-commit'
 brew 'ripgrep'
 brew 'yq'
-brew 'anomalyco/tap/opencode-v2'
+brew 'anomalyco/tap/opencode-v2', trusted: true
 
 # File & system utilities
 brew 'btop'
