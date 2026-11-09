@@ -5,55 +5,40 @@ Personal dotfiles for a Python development environment on macOS (PHP tooling liv
 > [!WARNING]
 > These are my personal dotfiles, tuned to my machines and workflow - not a framework, and not supported as one. "Works on my machine" is literal: read [what this assumes](#what-this-assumes) before running `script/bootstrap`, and fork the repo rather than adapting your machine to it.
 
+**TL;DR** - fresh install, in order:
+
+1. Clone, create `~/.localgroups`, run `script/bootstrap` - [full order](#after-a-fresh-install)
+2. Sign in to 1Password, enable the SSH agent and CLI, then `local-restore`
+3. Point `~/Mackup` at a synced folder, let sync finish, then `mackup restore` - never `mackup link`
+4. `atuin login`, `pre-commit install`, `dot-doctor`; moving machines? [old machine first](#moving-to-a-new-mac)
+
 ## what this assumes
 
-- **macOS**, Apple Silicon or Intel, with Xcode Command Line Tools. Apple Silicon runs Homebrew end to end; legacy Intel Macs use MacPorts for CLI tools ([details below](#intel-macs))
-- **zsh** as the login shell
+- **macOS** (Apple Silicon or Intel) with Xcode Command Line Tools, and **zsh** as the login shell. Apple Silicon runs Homebrew end to end; legacy Intel Macs use MacPorts for CLI tools ([details below](#intel-macs))
 - **1Password** is recommended but optional: it provides the SSH agent and, with the CLI, `local-backup` / `local-restore`. Without it you need another password manager for the machine-local files below
-- **`sudo`** during bootstrap: applying security defaults and fixing the hostname need admin rights
-- **Consent to macOS defaults**: `macos/set-defaults.sh` changes Finder, Dock, keyboard and trackpad settings; `macos/set-security-defaults.sh` requires a password immediately after screen lock
+- **`sudo` and consent to macOS defaults**: bootstrap needs admin rights for the security defaults and hostname fix, `macos/set-defaults.sh` changes Finder, Dock, keyboard and trackpad settings, and `macos/set-security-defaults.sh` requires a password immediately after screen lock
 
 ### Intel Macs
 
 Homebrew stopped Intel bottle builds, so a legacy Intel Mac runs CLI tools through MacPorts and has no brew install:
 
-- **Apple Silicon**: full Homebrew automation through the Brewfiles.
-- **Intel**: MacPorts owns the CLI tools listed in `Portsfile`; the Brewfiles stay the app/cask source of truth. `dot` runs `sudo port selfupdate`, `sudo port upgrade outdated`, then installs any new `Portsfile` entries - a sudo prompt is expected.
+- **Apple Silicon / Intel**: full Homebrew automation on Apple Silicon; on Intel, MacPorts owns the CLI tools listed in `Portsfile` and the Brewfiles stay the app/cask source of truth. `dot` runs `sudo port selfupdate`, `sudo port upgrade outdated`, then installs any new `Portsfile` entries - a sudo prompt is expected.
 - **Wiped Intel Mac**: install MacPorts from [macports.org](https://www.macports.org/install.php), run `dot`, then add what the Portsfile cannot carry: `composer` (official phar into `~/.local/bin`), the 1Password CLI (`op`, standalone) and the GUI apps (`script/bootstrap` prints the cask checklist).
-- `spaceman-diff` has no port, so its git image-diff driver errors on Intel - accepted limitation.
-- When adding or removing a brew formula on Apple Silicon, glance at `Portsfile`: it mirrors the shared `Brewfile` by hand, with no automated checker.
+- `spaceman-diff` has no port, so its git image-diff driver errors on Intel - accepted. `Portsfile` mirrors the shared `Brewfile` by hand with no automated checker, so glance at it when adding or removing a brew formula on Apple Silicon.
 
-CI runs lint and smoke checks on every push (including an Intel macOS runner) and a clean `brew bundle` install on an Apple Silicon runner monthly (`.github/workflows/`). That proves the repo is coherent - not that it fits your machine.
+CI runs lint and smoke checks on every push (including an Intel macOS runner) and a clean `brew bundle` install on an Apple Silicon runner monthly (`.github/workflows/`) - proof the repo is coherent, not that it fits your machine.
 
 ## stack
 
-- **Shell**: zsh with [Starship](https://starship.rs) prompt
-- **History**: [Atuin](https://atuin.sh) - shell history sync across machines
-- **Navigation & search**: [zoxide](https://github.com/ajeetdsouza/zoxide) (`z`), [fzf](https://github.com/junegunn/fzf) (Ctrl-T file picker)
-- **Diffs**: [git-delta](https://github.com/dandavison/delta) - side-by-side, syntax-highlighted git diffs
-- **Version management**: [mise](https://mise.jdx.dev) - Python, Node per project (prebuilt binaries)
-- **PHP versions** (work group): [PHP Monitor](https://phpmon.app) - Homebrew-based PHP switching (mise only offers source-compiled PHP)
-- **Docker**: [OrbStack](https://orbstack.dev)
-- **SSH**: 1Password SSH agent - no key files on disk
-- **App settings backup**: [Mackup](https://github.com/lra/mackup) - copy mode, whitelisted apps only
-- **Editor**: VS Code (a `vim/` config ships as well)
-- **Terminal**: Ghostty
+- **Shell**: zsh with [Starship](https://starship.rs), [Atuin](https://atuin.sh) history sync, [zoxide](https://github.com/ajeetdsouza/zoxide) / [fzf](https://github.com/junegunn/fzf) navigation, [git-delta](https://github.com/dandavison/delta) diffs
+- **Tooling**: [mise](https://mise.jdx.dev) for per-project Python and Node, [OrbStack](https://orbstack.dev) for Docker, VS Code (a `vim/` config ships too), Ghostty; PHP versions via [PHP Monitor](https://phpmon.app) in the `work` group. **State**: 1Password SSH agent (no key files on disk) and [Mackup](https://github.com/lra/mackup) copy-mode app settings; the Brewfiles are the full tool list
 
 ## structure
 
-Everything is topic-centric. Each folder is a subject area - `git/`, `php/`, `docker/`, etc.
-
 - **`topic/*.zsh`** - loaded automatically into every shell session
-- **`topic/path.zsh`** - loaded first (for `$PATH` setup)
-- **`topic/completion.zsh`** - loaded last (for autocomplete)
-- **`topic/*.symlink`** - symlinked into `$HOME` as `~/.<name>` by `script/bootstrap`
-- **`topic/config/**`** - symlinked into `~/.config/<topic>/` by `script/bootstrap`, preserving their path structure (`atuin/config/config.toml` → `~/.config/atuin/config.toml`) and their original names, so editor tooling still validates them
+- **`topic/path.zsh`** / **`topic/completion.zsh`** - loaded first / last, for `$PATH` setup and autocomplete
+- **`topic/*.symlink`** / **`topic/config/**`** - symlinked into `$HOME` / `~/.config/<topic>/` by `script/bootstrap`, with the config path structure and original name kept (`atuin/config/config.toml` → `~/.config/atuin/config.toml`), so editor tooling still validates them
 - **`topic/install.sh`** - run by `script/install` for actual software installation
-- **`bin/`** - scripts added to `$PATH`
-- **`script/`** - `bootstrap`, `install`, `uninstall`, and the lint checks used by pre-commit
-- **`1password/functions.zsh`** - optional `local-backup` / `local-restore` shell functions (see [machine-local backup](#machine-local-backup-optional-1password)); loaded only when the `op` CLI is installed
-
-Not every tool follows the `~/.config` convention. SSH expects its config outside `~/.config/`, so `ssh/install.sh` creates that symlink via holman's `install.sh` mechanism; Starship sets `STARSHIP_CONFIG` in `starship/env.zsh`, so it fits the automatic convention.
 
 ## install
 
@@ -68,21 +53,15 @@ $EDITOR ~/.localgroups
 script/bootstrap
 ```
 
-Create `~/.localgroups` **before** the first bootstrap: it is what tells `script/install` which app group this machine wants, so the shared `Brewfile` and that group's `Brewfile.<group>` install in one pass. Skip it and you get the shared apps only - `dot` installs the group later. Leave it with no active line for shared-only.
+Create `~/.localgroups` **before** the first bootstrap: it tells `script/install` which app group this machine wants, so the shared `Brewfile` and that group's `Brewfile.<group>` install in one pass. Skip it and you get the shared apps only - `dot` installs the group later. Leave it with no active line for shared-only.
 
-> **Fresh Mac**: a new Mac has no `git` yet. Running `git clone` triggers the Xcode Command Line Tools install prompt - accept it, wait for the install to finish, then re-run the clone.
+> **Fresh Mac**: a new Mac has no `git` yet. Running `git clone` triggers the Xcode Command Line Tools install prompt - accept it, wait for the install to finish, then re-run the clone. The repo can be cloned anywhere - `$ZSH` is resolved dynamically from the symlink.
 
-> The repo can be cloned anywhere - `$ZSH` is resolved dynamically from the symlink.
-
-`script/bootstrap` will:
-1. Prompt for your primary git identity (name + email → `~/.gitconfig.local`)
-2. Symlink every `*.symlink` file into `$HOME` and every `topic/config/**` file into `~/.config/` - if a target already exists it asks `[s]kip / [o]verwrite / [b]ackup` (`b` moves the old file to `<name>.backup`)
-3. Apply macOS defaults (some need `sudo`), apply security defaults, and fix a hostname macOS mangled - it does **not** prompt for a hostname
-4. Install dependencies - Homebrew and everything from `Brewfile` plus the app group selected in `~/.localgroups` on Apple Silicon; on Intel, print the manual MacPorts order and the cask checklist instead - then ask whether to restart
+`script/bootstrap` prompts for your git identity, symlinks every `*.symlink` and `topic/config/**` file (conflicts ask `[s]kip / [o]verwrite / [b]ackup`), applies macOS defaults, and installs dependencies. The full fresh-machine order is in [after a fresh install](#after-a-fresh-install).
 
 > **After bootstrap, switch the remote to SSH.** `dot` only auto-pulls SSH remotes, so the HTTPS clone above never updates itself:
 > ```sh
-> git -C ~/dotfiles remote set-url origin [EMAIL]:matthiasseghers/dotfiles.git
+> git -C ~/dotfiles remote set-url origin git@github.com:matthiasseghers/dotfiles.git
 > ```
 > Do this once the 1Password SSH agent works ([step 2](#after-a-fresh-install)) - a fresh Mac has no key yet, which is why the clone is HTTPS.
 
@@ -90,9 +69,9 @@ Create `~/.localgroups` **before** the first bootstrap: it is what tells `script
 
 ## after a fresh install
 
-1. Install Xcode Command Line Tools / clone the repo (see [install](#install)), create `~/.localgroups` for this machine, then run `script/bootstrap` - it prompts for your git identity, symlinks everything, applies macOS defaults, and installs dependencies (Homebrew + the Brewfile and the selected app group on Apple Silicon; the MacPorts manual order on Intel)
+1. Install Xcode Command Line Tools / clone the repo (see [install](#install)), create `~/.localgroups` for this machine, then run `script/bootstrap` - it prompts for your git identity, symlinks everything, applies macOS defaults, and installs dependencies (Homebrew + the Brewfile and selected app group on Apple Silicon; the MacPorts manual order on Intel)
 2. Open 1Password (installed by the Brewfile), sign in, and enable the SSH agent and CLI integration: Settings → Developer → *Use the SSH agent* + *Connect with 1Password CLI*
-3. `local-restore` - brings back the 1Password bundle: `~/.localrc`, the SSH overrides, the agent config, the Atuin key and the git identity files (needs step 2's CLI integration). If you did **not** create `~/.localgroups` before bootstrap, or want to change groups, create/edit it and run `dot` to install them
+3. `local-restore` - brings back the 1Password bundle: `~/.localrc`, the SSH overrides, the agent config, the Atuin key and the git identity files (needs step 2's CLI integration)
 4. Switch the git remote to SSH so `dot` can pull (see [install](#install))
 5. Recreate the Mackup storage link **before** restoring - a fresh machine has no `~/Mackup`, and `mackup restore` would silently create a local-only one:
    ```sh
@@ -101,22 +80,11 @@ Create `~/.localgroups` **before** the first bootstrap: it is what tells `script
    ```
    See [app settings](#app-settings-mackup) for the provider paths. On your old machine this link must already exist before `mackup backup`
 6. Sign in to your sync service, let it finish syncing, then run `mackup restore` - never `mackup link`
-7. `atuin login` - the encryption key came back in step 3, so history sync just works
-8. Install the Mac App Store apps listed in the Brewfile comment block (they can't be automated)
-9. `pre-commit install` - enable the local lint hooks
-10. `dot-doctor` - verify links, groups, storage and tools
-
-Fonts need no step: the casks in `Brewfile` install them and `ghostty/config/config` already names them.
+7. `atuin login`, `pre-commit install`, `dot-doctor` - history sync (the key came back in step 3), the lint hooks, then the health check
 
 ## staying up to date
 
-Run `dot` periodically (it's on your `$PATH` via `bin/`):
-
-```sh
-dot
-```
-
-This pulls the dotfiles repo (skipped if you have uncommitted changes **or if the remote is HTTPS** - see [install](#install)), updates the package manager (Apple Silicon: `brew update && brew upgrade --no-ask`; Intel: `sudo port selfupdate && sudo port upgrade outdated`), and installs anything new from the `Brewfile` and the group selected in `~/.localgroups` on Apple Silicon, or from `Portsfile` on Intel, plus the `topic/install.sh` scripts. `dot -e` opens the dotfiles directory in your editor.
+Run `dot` periodically (it's on your `$PATH` via `bin/`). It pulls the dotfiles repo (skipped if you have uncommitted changes **or if the remote is HTTPS** - see [install](#install)), updates the package manager (Apple Silicon: `brew update && brew upgrade --no-ask`; Intel: `sudo port selfupdate && sudo port upgrade outdated`) and installs anything new from the `Brewfile` and the group selected in `~/.localgroups`, or from `Portsfile` on Intel, plus the `topic/install.sh` scripts. `dot -e` opens the dotfiles directory in your editor.
 
 ## app groups
 
@@ -128,22 +96,10 @@ Apps are split across plain Brewfiles - one shared file every Mac gets, plus one
 | `Brewfile.work` | PHP tooling, work apps |
 | `Brewfile.personal` | Games, media, personal apps |
 
-Pick your group per machine in `~/.localgroups` (group names, space- or comma-separated; all uncommented lines combine):
+Pick your group per machine in `~/.localgroups` (names, space- or comma-separated; all uncommented lines combine) - a single `work` is enough. `system/localgroups.example` is a commented template.
 
-```sh
-# ~/.localgroups
-work
-```
-
-`system/localgroups.example` is a commented template - copy it and uncomment the line you want. Create it **before** the first `script/bootstrap` so the group's apps install in the same pass; add or change it later and `dot` installs them. `$DOTFILES_GROUPS` still works as a one-off override (and is what CI uses):
-
-```sh
-DOTFILES_GROUPS="work" dot
-```
-
-- **Lifecycle**: no active line (no file, empty file, everything commented) installs the shared `Brewfile` only; adding a group later is "edit the file, run `dot`"; **nothing is ever uninstalled automatically**, so removing an app from a Brewfile leaves it on disk
+- **Lifecycle**: no active line (no file, empty file, everything commented) installs the shared `Brewfile` only; adding a group later is "edit the file, run `dot`"; **nothing is ever uninstalled automatically**, so removing an app from a Brewfile leaves it on disk. Typos in the selection are reported by `dot` (via `script/install`) and `dot-doctor` before anything is installed. `DOTFILES_GROUPS="work" dot` overrides one run (CI uses it)
 - **New group**: create `Brewfile.<name>` in the repo root and it exists immediately. Each app appears in exactly one file, enforced by the `no-duplicate-brewfile-entries` pre-commit hook, and taps sit in the same file as the formulae/casks that need them
-- **Typos** in the selection are reported by `dot` (via `script/install`) and `dot-doctor` before anything is installed
 
 ## machine-specific config
 
@@ -160,32 +116,15 @@ These files are per machine and **never committed**:
 | `~/.config/1Password/ssh/agent.toml` | 1Password SSH agent config | `local-restore`, or your own password manager (template: `ssh/agent.toml.example`) |
 | `~/.local/share/atuin/key` | Atuin history-sync encryption key | `local-restore`, or your own password manager |
 
-To add shell config for the current machine only, create `~/.localrc`. To pick this machine's app group, create `~/.localgroups` (see [app groups](#app-groups)).
-
 > **Where `~/.localrc` stops**: it is sourced *before* the repo's `*.zsh` files (`zsh/zshrc.symlink:8`), so it is the right place for environment variables and secrets - but an alias or function defined there loses to the repo's own. For a permanent behaviour change, edit the repo (fork it) instead.
 
 ## app settings (Mackup)
 
-[Mackup](https://github.com/lra/mackup) backs up **app-written** settings and data (preferences, databases, save files) to a synced folder. The ownership rule:
-
-- **dotfiles own hand-written plain-text config** (anything in this repo)
-- **Mackup owns app-written prefs/data** - never both for the same file
-
-Rules:
+[Mackup](https://github.com/lra/mackup) backs up **app-written** settings and data (preferences, databases, save files) to a synced folder. Dotfiles own hand-written plain-text config (anything in this repo); Mackup owns app-written prefs/data - never both for the same file.
 
 - **Copy mode only**: run `mackup backup` / `mackup restore`. **Never run `mackup link`** - it replaces app files with symlinks and corrupts preferences on macOS 14+.
 - **Whitelist only**: `mackup/config/mackup.cfg` (linked to `~/.config/mackup/mackup.cfg`) lists exactly which apps are backed up. A missing *or empty* `[applications_to_sync]` means "back up everything" - including ssh, git, zsh and vim - which fights the dotfiles symlinks and copies `~/.ssh` to cloud storage.
-- **Storage is per machine, and nothing prompts for it**: the linked config resolves to `~/Mackup`, which is local-only until you point it at a synced folder:
-  ```sh
-  # Proton Drive / MEGA / Dropbox
-  mkdir -p "$HOME/Library/CloudStorage/<provider>/Mackup"
-  ln -s "$HOME/Library/CloudStorage/<provider>/Mackup" "$HOME/Mackup"
-
-  # iCloud Drive
-  mkdir -p "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Mackup"
-  ln -s "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Mackup" "$HOME/Mackup"
-  ```
-  One committed config then serves every machine, and `dot-doctor` reports whether the resolved folder is synced. Mark the folder **"Available offline"** (Finder: *Keep Downloaded*) - cloud providers otherwise leave placeholders Mackup cannot restore from.
+- **Storage is per machine, and nothing prompts for it**: the linked config resolves to `~/Mackup`, which is local-only until you point it at a synced folder - see [after a fresh install](#after-a-fresh-install) step 5 for the `ln -s` command. One committed config then serves every machine, and `dot-doctor` reports whether the resolved folder is synced. Mark the folder **"Available offline"** (Finder: *Keep Downloaded*) - cloud providers otherwise leave placeholders Mackup cannot restore from.
 - **Never create a partial `~/.mackup.cfg`**: Mackup reads exactly one config file (`~/.mackup.cfg` → `$MACKUP_CONFIG` → `~/.config/mackup/mackup.cfg`) and does not merge them. A storage-only override silently drops the whitelist and `mackup backup` copies `~/.ssh` to the cloud. If you must override, repeat the whole file.
 - **Custom apps**: add a `.cfg` under `mackup/config/applications/` in this repo; `script/bootstrap` links it to `~/.config/mackup/applications/` where Mackup picks it up. Paths are relative to `$HOME` (`[configuration_files]`) or to `~/.config` (`[xdg_configuration_files]`). Check `mackup show <app>` to see what will be backed up.
 - **Raycast**: only the plist and plain config files are synced. Raycast's real data (snippets, quicklinks, hotkeys) lives in an encrypted local database that does not restore usefully - for a full backup use Raycast's own **Settings → Advanced → Export** (`.rayconfig` file).
@@ -200,17 +139,12 @@ local-restore           # restore this machine's backup into $HOME
 local-restore "dotfiles: other-machine"   # restore another machine's backup
 ```
 
-- The Document is titled `dotfiles: <hostname>`; override with `DOTFILES_BACKUP_NAME`. The file list lives in `script/lib/machine-local.sh`, which `dot-doctor` reads too, so the two cannot drift.
-- Deliberately **not** in the bundle: `~/.localgroups` (must exist before bootstrap, when `op` doesn't exist yet), `~/.gitconfig.local` (bootstrap regenerates it from the prompt) and the Mackup folder (app data, backed up by Mackup).
-- Restored files are chmod 600. `local-restore` never overwrites existing files (`tar -k`) - move them aside first.
-- Without 1Password, back up those files yourself (password manager, encrypted archive, …).
-- **Secrets never go into Mackup** - the Mackup whitelist deliberately excludes ssh, git and shell configs.
+- The Document is titled `dotfiles: <hostname>`; override with `DOTFILES_BACKUP_NAME`. The file list lives in `script/lib/machine-local.sh`, which `dot-doctor` reads too, so the two cannot drift. Deliberately **not** in the bundle: `~/.localgroups` (must exist before bootstrap, when `op` doesn't exist yet), `~/.gitconfig.local` (bootstrap regenerates it from the prompt) and the Mackup folder (app data, backed up by Mackup).
+- Restored files are chmod 600. `local-restore` never overwrites existing files (`tar -k`) - move them aside first. Without 1Password, back up those files yourself (password manager, encrypted archive, …); **secrets never go into Mackup**, whose whitelist deliberately excludes ssh, git and shell configs.
 
 ## git identities
 
-The primary identity is set during bootstrap. If you only ever commit as one identity, that's all you need - the machinery below is optional and silently ignored when unused.
-
-To add a folder-scoped identity (e.g. different author for work projects):
+The primary identity is set during bootstrap; if you only ever commit as one identity, that's all you need - the machinery below is optional and silently ignored when unused. For a folder-scoped identity (e.g. a different author for work projects):
 
 ```sh
 bin/git-add-identity
@@ -222,11 +156,7 @@ This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gi
 
 ## dot-doctor
 
-`dot-doctor` is the health check - run it after a restore, after changing a group, or when something feels off. It reports, and exits non-zero only on real failures:
-
-- symlinks missing or pointing at the wrong source (derived from the repo, same rules as `script/bootstrap`)
-- broken `~/.config` links, Mackup whitelist and storage, `~/.localgroups` provenance and unknown groups
-- machine-local files, git identity references, required and optional tools, mise status
+`dot-doctor` is the health check - run it after a restore, after changing a group, or when something feels off. It reports missing or wrong symlinks (same rules as `script/bootstrap`), broken `~/.config` links, the Mackup whitelist and storage, `~/.localgroups` provenance and unknown groups, machine-local files, git identities, tools and mise, and exits non-zero only on real failures.
 
 It never changes anything. A `[WARN]` is something to read; a `[FAIL]` is something to fix.
 
@@ -237,10 +167,8 @@ The order matters, because three things cannot be recreated from the repo: the 1
 **On the old machine:**
 
 1. `dot-doctor` - fix what it fails first, so you migrate a known-good state
-2. `local-backup` - packs `~/.localrc`, the SSH overrides, the 1Password agent config, the Atuin key and the git identities into one Document titled `dotfiles: <hostname>`
-3. `mackup backup` - app settings and data
-4. Push every branch you care about (including work-in-progress) and note unpushed stashes
-5. Note the Mac App Store apps (the comment block at the end of `Brewfile`) - they cannot be automated
+2. `local-backup` - packs the files listed under [machine-local backup](#machine-local-backup-optional-1password) into one Document titled `dotfiles: <hostname>`; then `mackup backup` for app settings and data
+3. Push every branch you care about (including work-in-progress) and note unpushed stashes
 
 **On the new machine:** follow [after a fresh install](#after-a-fresh-install). Four ordering constraints:
 
@@ -251,10 +179,8 @@ The order matters, because three things cannot be recreated from the repo: the 1
 
 ## removing
 
-`script/uninstall` deletes every symlink in `$HOME` and `~/.config` that points into this repo, and stops there - Homebrew packages, `~/.gitconfig.local` and app data are left untouched. Remove the repo clone afterwards if you want a clean slate.
+`script/uninstall` deletes every symlink in `$HOME` and `~/.config` that points into this repo, and stops there - Homebrew packages, `~/.gitconfig.local` and app data are left untouched. Remove the repo clone afterwards for a clean slate.
 
 ## credits
 
-The structure, the `topic/` layout, the `.symlink` convention, the `bin/` convention and the auto-loading `.zsh` files come from [Zach Holman's dotfiles](https://github.com/holman/dotfiles) - see his [dotfiles are meant to be forked](https://zachholman.com/2010/08/dotfiles-are-meant-to-be-forked/). `LICENSE.md` is his MIT licence, unchanged; this fork adds the app groups, the macOS/Mackup/1Password integration and the doctor.
-
-Mackup's config format and the "back up by whitelist" habit were shaped by [Dries Vints' dotfiles](https://github.com/driesvints/dotfiles) and the [dotfiles.github.io](https://dotfiles.github.io/) community.
+The structure, the `topic/` layout, the `.symlink` and `bin/` conventions and the auto-loading `.zsh` files come from [Zach Holman's dotfiles](https://github.com/holman/dotfiles). `LICENSE.md` is his MIT licence, unchanged; this fork adds the app groups, the macOS/Mackup/1Password integration and the doctor. Mackup's config format was shaped by [Dries Vints' dotfiles](https://github.com/driesvints/dotfiles) and the [dotfiles.github.io](https://dotfiles.github.io/) community.
