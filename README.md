@@ -20,9 +20,8 @@ Personal dotfiles for a Python development environment on macOS (PHP tooling liv
 
 ### Intel Macs
 
-Homebrew stopped Intel bottle builds, so a legacy Intel Mac runs CLI tools through MacPorts and has no brew install:
+Homebrew stopped Intel bottle builds, so a legacy Intel Mac has no brew install: MacPorts owns the CLI tools listed in [`Portsfile`](Portsfile), while the Brewfiles stay the app/cask source of truth. `dot` runs the port updates and installs any new `Portsfile` entries.
 
-- **Apple Silicon / Intel**: full Homebrew automation on Apple Silicon; on Intel, MacPorts owns the CLI tools listed in `Portsfile` and the Brewfiles stay the app/cask source of truth. `dot` runs `sudo port selfupdate`, `sudo port upgrade outdated`, then installs any new `Portsfile` entries - a sudo prompt is expected.
 - **Wiped Intel Mac**: install MacPorts from [macports.org](https://www.macports.org/install.php), run `dot`, then add what the Portsfile cannot carry: `composer` (official phar into `~/.local/bin`), the 1Password CLI (`op`, standalone) and the GUI apps (`script/bootstrap` prints the cask checklist).
 - `spaceman-diff` has no port, so its git image-diff driver errors on Intel - accepted. `Portsfile` mirrors the shared `Brewfile` by hand with no automated checker, so glance at it when adding or removing a brew formula on Apple Silicon.
 
@@ -43,7 +42,7 @@ CI runs lint and smoke checks on every push (including an Intel macOS runner) an
 ## install
 
 > [!IMPORTANT]
-> **On an Intel Mac?** Homebrew is not used there: CLI tools come from MacPorts via [`Portsfile`](Portsfile), and `sudo` prompts are expected during install and updates (GUI apps are installed by hand from a checklist `script/bootstrap` prints). See [Intel Macs](#intel-macs).
+> **On an Intel Mac?** No brew here - see [Intel Macs](#intel-macs); the rest of this section assumes Apple Silicon.
 
 ```sh
 git clone https://github.com/matthiasseghers/dotfiles.git ~/dotfiles
@@ -53,7 +52,7 @@ $EDITOR ~/.localgroups
 script/bootstrap
 ```
 
-Create `~/.localgroups` **before** the first bootstrap: it tells `script/install` which app group this machine wants, so the shared `Brewfile` and that group's `Brewfile.<group>` install in one pass. Skip it and you get the shared apps only - `dot` installs the group later. Leave it with no active line for shared-only.
+Create `~/.localgroups` **before** the first bootstrap: it tells `script/install` which app group this machine wants, so the shared `Brewfile` and that group's `Brewfile.<group>` install in one pass. Leave it with no active line for shared apps only.
 
 > **Fresh Mac**: a new Mac has no `git` yet. Running `git clone` triggers the Xcode Command Line Tools install prompt - accept it, wait for the install to finish, then re-run the clone. The repo can be cloned anywhere - `$ZSH` is resolved dynamically from the symlink.
 
@@ -65,11 +64,11 @@ Create `~/.localgroups` **before** the first bootstrap: it tells `script/install
 > ```
 > Do this once the 1Password SSH agent works ([step 2](#after-a-fresh-install)) - a fresh Mac has no key yet, which is why the clone is HTTPS.
 
-> **Fresh-install caveat**: the `work` group's `phpmon` cask declares `trusted: true` - since Homebrew 6.0, `brew bundle` refuses formulae and casks from taps you have not explicitly trusted, and the declaration grants that trust automatically. The base `Brewfile` sticks to homebrew-core, which is always trusted.
+> **Fresh-install caveat**: the `work` group's `phpmon` cask declares `trusted: true`. Homebrew 6.0 refuses formulae and casks from untrusted taps; that declaration grants the trust automatically, and the base `Brewfile` sticks to always-trusted homebrew-core.
 
 ## after a fresh install
 
-1. Install Xcode Command Line Tools / clone the repo (see [install](#install)), create `~/.localgroups` for this machine, then run `script/bootstrap` - it prompts for your git identity, symlinks everything, applies macOS defaults, and installs dependencies (Homebrew + the Brewfile and selected app group on Apple Silicon; the MacPorts manual order on Intel)
+1. Install Xcode Command Line Tools and clone the repo ([install](#install)), create `~/.localgroups` **before** `script/bootstrap`, then run it - bootstrap's effects are covered in [install](#install); on Intel, use the [MacPorts manual order](#intel-macs)
 2. Open 1Password (installed by the Brewfile), sign in, and enable the SSH agent and CLI integration: Settings → Developer → *Use the SSH agent* + *Connect with 1Password CLI*
 3. `local-restore` - brings back the 1Password bundle: `~/.localrc`, the SSH overrides, the agent config, the Atuin key and the git identity files (needs step 2's CLI integration)
 4. Switch the git remote to SSH so `dot` can pull (see [install](#install))
@@ -84,7 +83,7 @@ Create `~/.localgroups` **before** the first bootstrap: it tells `script/install
 
 ## staying up to date
 
-Run `dot` periodically (it's on your `$PATH` via `bin/`). It pulls the dotfiles repo (skipped if you have uncommitted changes **or if the remote is HTTPS** - see [install](#install)), updates the package manager (Apple Silicon: `brew update && brew upgrade --no-ask`; Intel: `sudo port selfupdate && sudo port upgrade outdated`) and installs anything new from the `Brewfile` and the group selected in `~/.localgroups`, or from `Portsfile` on Intel, plus the `topic/install.sh` scripts. `dot -e` opens the dotfiles directory in your editor.
+Run `dot` periodically (it's on your `$PATH` via `bin/`). It pulls the dotfiles repo (skipped if you have uncommitted changes **or if the remote is HTTPS** - see [install](#install)), updates the package manager (Apple Silicon: `brew update && brew upgrade --no-ask`; Intel: `sudo port selfupdate && sudo port upgrade outdated`, sudo prompts expected) and installs anything new from the `Brewfile` and the group selected in `~/.localgroups` (`Portsfile` on Intel), plus the `topic/install.sh` scripts. `dot -e` opens the dotfiles directory in your editor.
 
 ## app groups
 
@@ -140,7 +139,7 @@ local-restore "dotfiles: other-machine"   # restore another machine's backup
 ```
 
 - The Document is titled `dotfiles: <hostname>`; override with `DOTFILES_BACKUP_NAME`. The file list lives in `script/lib/machine-local.sh`, which `dot-doctor` reads too, so the two cannot drift. Deliberately **not** in the bundle: `~/.localgroups` (must exist before bootstrap, when `op` doesn't exist yet), `~/.gitconfig.local` (bootstrap regenerates it from the prompt) and the Mackup folder (app data, backed up by Mackup).
-- Restored files are chmod 600. `local-restore` never overwrites existing files (`tar -k`) - move them aside first. Without 1Password, back up those files yourself (password manager, encrypted archive, …); **secrets never go into Mackup**, whose whitelist deliberately excludes ssh, git and shell configs.
+- Restored files are chmod 600. `local-restore` never overwrites existing files (`tar -k`) - move them aside first. Without 1Password, back up those files yourself (password manager, encrypted archive, …); **secrets never go into Mackup** (see [app settings](#app-settings-mackup)).
 
 ## git identities
 
@@ -170,12 +169,7 @@ The order matters, because three things cannot be recreated from the repo: the 1
 2. `local-backup` - packs the files listed under [machine-local backup](#machine-local-backup-optional-1password) into one Document titled `dotfiles: <hostname>`; then `mackup backup` for app settings and data
 3. Push every branch you care about (including work-in-progress) and note unpushed stashes
 
-**On the new machine:** follow [after a fresh install](#after-a-fresh-install). Four ordering constraints:
-
-- `~/.localgroups` must exist **before** `script/bootstrap`, or the group's apps are skipped on the first pass
-- 1Password must be signed in **before** `local-restore`
-- the sync service must have finished syncing **before** `mackup restore`
-- the `~/Mackup` symlink must exist **before** `mackup restore`, or Mackup creates a local-only folder
+**On the new machine:** Follow [after a fresh install](#after-a-fresh-install) in order; steps 1, 3, 5 and 6 each fail quietly if the earlier one isn't done (no group apps / no restore / local-only Mackup / partial restore).
 
 ## removing
 
