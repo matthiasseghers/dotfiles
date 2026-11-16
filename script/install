@@ -50,12 +50,13 @@ if [ "${DOTFILES_LEGACY_INTEL:-0}" = "1" ]; then
   dotfiles_intel_install_ports
 else
   echo "› brew bundle"
-  brew bundle --verbose --no-upgrade --file=Brewfile
+  brew bundle --verbose --no-upgrade --file=Brewfile < /dev/null
 
+  # brew bundle's children must not inherit this loop's stdin, or they eat the remaining groups.
   while IFS= read -r g; do
     [ -n "$g" ] || continue
     echo "› brew bundle (group: $g)"
-    brew bundle --verbose --no-upgrade --file="Brewfile.$g"
+    brew bundle --verbose --no-upgrade --file="Brewfile.$g" < /dev/null
   done <<<"$requested"
 fi
 

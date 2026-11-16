@@ -48,7 +48,7 @@ CI runs lint and smoke checks on every push (including an Intel macOS runner) an
 git clone https://github.com/matthiasseghers/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 cp system/localgroups.example ~/.localgroups   # then uncomment what this machine wants
-$EDITOR ~/.localgroups
+${EDITOR:-vi} ~/.localgroups
 script/bootstrap
 ```
 
