@@ -6,9 +6,9 @@ cask_args appdir: '/Applications'
 # fight the managed installs.
 
 # Third-party taps
-tap 'nicoverbruggen/cask'      # PHP Monitor cask
-tap 'shivammathur/php'         # PHP Monitor: legacy PHP versions
-tap 'shivammathur/extensions'  # PHP Monitor: PHP extensions
+tap 'nicoverbruggen/cask'                    # PHP Monitor cask
+tap "shivammathur/php", trusted: true        # PHP Monitor: legacy PHP versions
+tap "shivammathur/extensions", trusted: true # PHP Monitor: PHP extensions
 
 # PHP
 brew 'php'
