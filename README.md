@@ -138,7 +138,7 @@ local-restore           # restore this machine's backup into $HOME
 local-restore "dotfiles: other-machine"   # restore another machine's backup
 ```
 
-- The Document is titled `dotfiles: <hostname>`; override with `DOTFILES_BACKUP_NAME`. The file list lives in `script/lib/machine-local.sh`, which `dot-doctor` reads too, so the two cannot drift. Deliberately **not** in the bundle: `~/.localgroups` (must exist before bootstrap, when `op` doesn't exist yet), `~/.gitconfig.local` (bootstrap regenerates it from the prompt) and the Mackup folder (app data, backed up by Mackup).
+- The Document is titled `dotfiles: <hostname>`; override with `DOTFILES_BACKUP_NAME`. A hostname rename after the backup (macOS appends `-2`-style suffixes and `macos/set-hostname.sh` strips them) orphans that Document, so restore it by the old title: `local-restore "dotfiles: <old-hostname>"`. The file list lives in `script/lib/machine-local.sh`, which `dot-doctor` reads too, so the two cannot drift. Deliberately **not** in the bundle: `~/.localgroups` (must exist before bootstrap, when `op` doesn't exist yet), `~/.gitconfig.local` (bootstrap regenerates it from the prompt) and the Mackup folder (app data, backed up by Mackup).
 - Restored files are chmod 600. `local-restore` never overwrites existing files (`tar -k`) - move them aside first. Without 1Password, back up those files yourself (password manager, encrypted archive, …); **secrets never go into Mackup** (see [app settings](#app-settings-mackup)).
 
 ## git identities

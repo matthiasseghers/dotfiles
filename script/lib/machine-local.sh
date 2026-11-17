@@ -13,10 +13,13 @@ export dotfiles_backup_files='
 .gitconfig.identities
 '
 
-# Also packed, matched by glob: folder-scoped git identity files. Labels
-# vary per machine (~/.gitconfig-pers, ~/.gitconfig-work, ...).
+# Also packed, matched by glob: folder-scoped git identity files and the
+# public halves of the SSH keys. Labels vary per machine (~/.gitconfig-pers,
+# ~/.gitconfig-work, ...); public keys are not secrets, the private ones
+# never match.
 export dotfiles_backup_globs='
 .gitconfig-*
+.ssh/*.pub
 '
 
 # Machine-local but never backed up, each for its own reason:

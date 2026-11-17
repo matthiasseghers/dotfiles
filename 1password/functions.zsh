@@ -48,6 +48,8 @@ local-backup () {
     print -u2 "local-backup: no machine-local files found, nothing to do"
     return 1
   fi
+  # The default title carries this machine's hostname: a rename after a
+  # backup orphans that Document, so local-restore then needs the old title.
   local title="${DOTFILES_BACKUP_NAME:-dotfiles: $(scutil --get LocalHostName)}"
   print "local-backup: packing ${present[*]}"
   local -a op_cmd
@@ -90,5 +92,7 @@ local-restore () {
   for f in $_local_backup_files ${restored:#}; do
     [[ -f $HOME/$f ]] && chmod 600 "$HOME/$f"
   done
+  # The mkdir -p above creates ~/.ssh at the umask default; ssh wants 700.
+  [[ -d $HOME/.ssh ]] && chmod 700 "$HOME/.ssh"
   return $tar_status
 }

@@ -65,6 +65,13 @@ setup_gitconfig () {
 
     # Substitute per line instead of sed: a value containing '/', '&' or '\'
     # would otherwise break the s/// expression or be read as a backreference.
+    # bash 5.2's patsub_replacement reads '&' in an unquoted replacement as the
+    # matched text; quoting the replacement keeps it literal there, but bash
+    # 3.2 (macOS /bin/bash) then writes the quotes into the file. Switch the
+    # option off where it exists and keep both replacements unquoted.
+    if shopt -s patsub_replacement 2>/dev/null; then
+      shopt -u patsub_replacement
+    fi
     local line
     while IFS= read -r line || [ -n "$line" ]; do
       line="${line/AUTHORNAME/$git_authorname}"
@@ -100,7 +107,12 @@ link_file () {
 
         user "File already exists: $dst ($(basename "$src")), what do you want to do?
         [s]kip, [S]kip all, [o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all?"
-        read -rn 1 action < /dev/tty
+        # No terminal (piped or CI run): read fails and set -e would abort the
+        # whole bootstrap, so default to skip instead of asking.
+        if ! read -rn 1 action < /dev/tty 2>/dev/null; then
+          action=''
+          info "no terminal for the prompt - skipping $dst (move it aside to link)"
+        fi
 
         case "$action" in
           o )
