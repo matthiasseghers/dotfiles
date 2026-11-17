@@ -19,6 +19,11 @@ if [ -f "$DOTFILES_ROOT/script/lib/legacy-intel.sh" ]; then
   source "$DOTFILES_ROOT/script/lib/legacy-intel.sh"
 fi
 
+# Homebrew on PATH for the current process (a stale shell or a direct run).
+# shellcheck source=script/lib/brew-env.sh
+# shellcheck disable=SC1091
+source "$DOTFILES_ROOT/script/lib/brew-env.sh"
+
 available="$(dotfiles_available_groups_line)"
 requested="$(dotfiles_requested_groups)"
 
@@ -49,6 +54,8 @@ if [ "${DOTFILES_LEGACY_INTEL:-0}" = "1" ]; then
   fi
   dotfiles_intel_install_ports
 else
+  dotfiles_brew_shellenv
+
   echo "› brew bundle"
   brew bundle --verbose --no-upgrade --file=Brewfile < /dev/null
 

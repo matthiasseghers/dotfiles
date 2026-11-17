@@ -8,5 +8,6 @@
 # of plebian when you can just run another command?
 
 # Word splitting is intentional: one argument per untracked file.
+# EDITOR may be unset: a bare $EDITOR would then run the new files themselves.
 # shellcheck disable=SC2046
-$EDITOR $(git ls-files --others --exclude-standard)
+${EDITOR:-vi} $(git ls-files --others --exclude-standard)

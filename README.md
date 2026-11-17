@@ -16,7 +16,7 @@ Personal dotfiles for a Python development environment on macOS (PHP tooling liv
 
 - **macOS** (Apple Silicon or Intel) with Xcode Command Line Tools, and **zsh** as the login shell. Apple Silicon runs Homebrew end to end; legacy Intel Macs use MacPorts for CLI tools ([details below](#intel-macs))
 - **1Password** is recommended but optional: it provides the SSH agent and, with the CLI, `local-backup` / `local-restore`. Without it you need another password manager for the machine-local files below
-- **`sudo` and consent to macOS defaults**: bootstrap needs admin rights for the security defaults and hostname fix, `macos/set-defaults.sh` changes Finder, Dock, keyboard and trackpad settings, and `macos/set-security-defaults.sh` requires a password immediately after screen lock
+- **`sudo` and consent to macOS defaults**: bootstrap needs admin rights for the hostname fix, `macos/set-defaults.sh` changes Finder, Dock, keyboard and trackpad settings, and `macos/set-security-defaults.sh` asks once for the login password (a declined or non-interactive run only prints the manual command) so a password is required immediately after screen lock
 
 ### Intel Macs
 
@@ -149,13 +149,13 @@ The primary identity is set during bootstrap; if you only ever commit as one ide
 bin/git-add-identity
 ```
 
-This creates `~/.gitconfig-<label>` and appends an `[includeIf]` block to `~/.gitconfig.identities`, so commits under that folder automatically use the right identity. The script refuses duplicate labels and non-existent folders - both would otherwise fail silently. Both files are included in `local-backup`, so a reinstall gets them back.
+This creates `~/.gitconfig-<label>` and appends an `[includeIf "gitdir/i:..."]` block to `~/.gitconfig.identities`, so commits under that folder automatically use the right identity (`/i` = case-insensitive matching). Re-run it with an existing label to add another folder for the same identity. The script refuses non-existent folders and a label whose config file went missing - both would otherwise fail silently. Both files are included in `local-backup`, so a reinstall gets them back.
 
 > **Note**: this scopes *commit authorship* (name/email), not SSH authentication or signing. If your identities use different SSH keys in 1Password, select the right key per host in `$HOME/.ssh/config.local`.
 
 ## dot-doctor
 
-`dot-doctor` is the health check - run it after a restore, after changing a group, or when something feels off. It reports missing or wrong symlinks (same rules as `script/bootstrap`), broken `~/.config` links, the Mackup whitelist and storage, `~/.localgroups` provenance and unknown groups, machine-local files, git identities, tools and mise, and exits non-zero only on real failures.
+`dot-doctor` is the health check - run it after a restore, after changing a group, or when something feels off. It reports missing or wrong symlinks (same rules as `script/bootstrap`), broken `~/.config` links, the Mackup whitelist and storage, `~/.localgroups` provenance and unknown groups, machine-local files, git identities (including plain `gitdir:` rules and missing identity folders), the screen-lock setting, tools and mise, and exits non-zero only on real failures.
 
 It never changes anything. A `[WARN]` is something to read; a `[FAIL]` is something to fix.
 

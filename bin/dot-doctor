@@ -271,6 +271,31 @@ if [ -f "$HOME/.gitconfig.identities" ]; then
     fi
   done < <(sed -n 's/^[[:space:]]*path[[:space:]]*=[[:space:]]*//p' "$HOME/.gitconfig.identities")
   [ "$identity_refs" -gt 0 ] || warn "no [includeIf] path entries in ~/.gitconfig.identities"
+
+  # The rule itself, not just its target: plain gitdir: matches case-sensitively,
+  # so on a case-insensitive APFS volume a folder typed in another case never
+  # matches. gitdir/i: is the same rule with that trap removed. A wildcard rule
+  # (**/Work) is a pattern, not a path, so there is no folder to test.
+  while IFS= read -r rule; do
+    [ -n "$rule" ] || continue
+    case "$rule" in
+      gitdir/i:*) dir="${rule#gitdir/i:}" ;;
+      gitdir:*)
+        dir="${rule#gitdir:}"
+        warn "plain gitdir: in ~/.gitconfig.identities - use gitdir/i: so a differently-cased path still matches ($dir)"
+        ;;
+      *) continue ;;
+    esac
+    if [[ "$dir" == *'*'* || "$dir" == *'?'* ]]; then
+      continue
+    fi
+    # ~ expands in git config; a relative rule resolves against the config
+    # file's own folder, so only absolute rules are checked here.
+    dir="${dir/#\~/$HOME}"
+    case "$dir" in
+      /*) [ -d "${dir%/}" ] || warn "missing folder: ${dir%/} (gitdir rule in ~/.gitconfig.identities matches nothing)" ;;
+    esac
+  done < <(sed -n 's/^[[:space:]]*\[includeIf[[:space:]]*"\(gitdir[^"]*\)".*/\1/p' "$HOME/.gitconfig.identities")
 elif [ "$identity_count" -gt 0 ]; then
   warn "missing: ~/.gitconfig.identities - $identity_count ~/.gitconfig-* file(s) exist, so the includeIf rules are gone (re-add with bin/git-add-identity)"
 fi
@@ -285,6 +310,28 @@ fi
 
 if [ ! -f "$(dotfiles_groups_file)" ]; then
   info "missing: ~/.localgroups (optional; shared apps only - see system/localgroups.example)"
+fi
+
+# Screen lock (macOS 13+). sysadminctl reads a password only when told to
+# (-password -); without an admin session it prints "Password is required!"
+# and exits instead of prompting, so < /dev/null keeps dot-doctor non-blocking.
+if [ "$(uname -s)" = "Darwin" ] && command -v sysadminctl >/dev/null 2>&1; then
+  info "checking screen lock..."
+  screen_lock="$(sysadminctl -screenLock status 2>/dev/null < /dev/null || true)"
+  case "$screen_lock" in
+    *immediate*)
+      success "password required immediately after screen lock"
+      ;;
+    '')
+      info "screen lock status needs an admin session - macos/set-security-defaults.sh applies and reports it"
+      ;;
+    *"Password is required"*)
+      info "screen lock status needs an admin session - macos/set-security-defaults.sh applies and reports it"
+      ;;
+    *)
+      warn "screen lock is not immediate ($screen_lock) - apply it: sysadminctl -screenLock immediate -password -"
+      ;;
+  esac
 fi
 
 # Required tools

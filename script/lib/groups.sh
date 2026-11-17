@@ -66,8 +66,13 @@ dotfiles_groups_source() {
 # de-duplicate (first occurrence wins). One per line, in request order.
 _dotfiles_split_groups() {
   local raw="${1:-}"
-  local seen="" g rest
+  local seen="" g rest had_noglob=''
   rest="${raw//,/ }"
+  # A stray '*' in ~/.localgroups must stay a literal group name so validation
+  # reports "Unknown group '*'", not a list of filenames. -f would also leak
+  # into the caller, so restore it; set -e is not involved either way.
+  case $- in *f*) had_noglob=1 ;; esac
+  set -f
   for g in $rest; do
     case ",$seen," in
       *,"$g",*) continue ;;
@@ -75,6 +80,7 @@ _dotfiles_split_groups() {
     seen="$seen,$g"
     printf '%s\n' "$g"
   done
+  [ -n "$had_noglob" ] || set +f
 }
 
 # Print the groups listed in ~/.localgroups, one per line. Empty when the

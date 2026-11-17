@@ -6,6 +6,7 @@
 #
 # Prompts for a label, name, email, and folder path.
 # Creates ~/.gitconfig-<label> and appends an [includeIf] block to ~/.gitconfig.identities.
+# Re-run with an existing label to add another folder for that same identity.
 
 set -e
 
@@ -16,14 +17,58 @@ if [ ! -f "$HOME/.gitconfig.local" ]; then
   exit 1
 fi
 
+# Prompt for a folder, expand ~, ensure a trailing slash, and require that it
+# exists. A typo'd path means the identity silently never applies - git does
+# not warn about [includeIf] blocks that match nothing.
+read_folder () {
+  printf "Folder path (e.g. ~/Projects/Work/): "
+  read -r folder
+  folder="${folder/#\~/$HOME}"
+  folder="${folder%/}/"
+  if [ ! -d "$folder" ]; then
+    echo "Error: folder '$folder' does not exist."
+    exit 1
+  fi
+}
+
+# gitdir/i: matches case-insensitively - APFS is case-insensitive by default,
+# so a rule written with different casing than the folder on disk would never
+# fire under plain gitdir:.
+append_rule () {
+  cat >> "$GITCONFIG_IDENTITIES" <<EOF
+
+[includeIf "gitdir/i:$folder"]
+  path = $cfg_file
+EOF
+}
+
 printf "Label (e.g. work): "
 read -r label
 
-# Guard against duplicate labels - a second [includeIf] for the same label
-# would silently win and orphan the first identity file
-if [ -f "$HOME/.gitconfig-$label" ] || grep -q "gitconfig-$label" "$GITCONFIG_IDENTITIES" 2>/dev/null; then
-  echo "Error: identity '$label' already exists (~/.gitconfig-$label)."
-  echo "Edit $GITCONFIG_IDENTITIES and ~/.gitconfig-$label manually to change it."
+cfg_file="$HOME/.gitconfig-$label"
+
+if [ -f "$cfg_file" ]; then
+  # One identity often spans several folders (work client checkouts, private
+  # mirrors), so an existing label offers another rule instead of an error.
+  echo "Identity '$label' already exists (~/.gitconfig-$label)."
+  printf "Add another folder for identity '%s'? [y/N] " "$label"
+  read -r add_another
+  case "$add_another" in
+    y|Y) ;;
+    *)
+      echo "Nothing changed. Edit $GITCONFIG_IDENTITIES and ~/.gitconfig-$label manually to change it."
+      exit 0
+      ;;
+  esac
+  read_folder
+  append_rule
+  echo "✓ Identity '$label' also applies to → $folder"
+  echo "  Config: $cfg_file (unchanged)"
+  exit 0
+elif grep -q "gitconfig-$label" "$GITCONFIG_IDENTITIES" 2>/dev/null; then
+  # A rule without its file is a broken state that another rule cannot fix.
+  echo "Error: ~/.gitconfig-$label is missing, but $GITCONFIG_IDENTITIES references it."
+  echo "Restore the file or remove the stale [includeIf] block, then re-run."
   exit 1
 fi
 
@@ -33,21 +78,7 @@ read -r name
 printf "Email: "
 read -r email
 
-printf "Folder path (e.g. ~/Projects/Work/): "
-read -r folder
-
-# Expand ~ and ensure trailing slash
-folder="${folder/#\~/$HOME}"
-folder="${folder%/}/"
-
-# A typo'd path means the identity silently never applies - git does not
-# warn about [includeIf] blocks that match nothing
-if [ ! -d "$folder" ]; then
-  echo "Error: folder '$folder' does not exist."
-  exit 1
-fi
-
-cfg_file="$HOME/.gitconfig-$label"
+read_folder
 
 cat > "$cfg_file" <<EOF
 [user]
@@ -55,11 +86,7 @@ cat > "$cfg_file" <<EOF
   email = $email
 EOF
 
-cat >> "$GITCONFIG_IDENTITIES" <<EOF
-
-[includeIf "gitdir:$folder"]
-  path = $cfg_file
-EOF
+append_rule
 
 echo "✓ Identity '$label' added → $folder"
 echo "  Config: $cfg_file"

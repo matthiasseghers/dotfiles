@@ -34,13 +34,43 @@ setup_gitconfig () {
   then
     info 'setup gitconfig'
 
-    user ' What is your github author name?'
-    read -re git_authorname
-    user ' What is your github author email?'
-    read -re git_authoremail
+    # read returns 1 on Ctrl-D and on a closed stdin, which would abort the
+    # script under set -e. Catch it here instead: a terminal can retry, a
+    # piped run (CI) cannot, so it skips the file and lets bootstrap continue.
+    git_authorname=''
+    while [ -z "$git_authorname" ]; do
+      user ' What is your github author name?'
+      if read -re git_authorname; then
+        [ -n "$git_authorname" ] || user ' A name is required.'
+      elif [ -t 0 ]; then
+        user ' A name is required (Ctrl-D clears the line, it does not cancel).'
+      else
+        warn 'no author name on stdin - skipping gitconfig (rerun bootstrap in a terminal)'
+        return 0
+      fi
+    done
 
-    sed -e "s/AUTHORNAME/$git_authorname/g" -e "s/AUTHOREMAIL/$git_authoremail/g" \
-      git/gitconfig.local.symlink.example > git/gitconfig.local.symlink
+    git_authoremail=''
+    while [ -z "$git_authoremail" ]; do
+      user ' What is your github author email?'
+      if read -re git_authoremail; then
+        [ -n "$git_authoremail" ] || user ' An email is required.'
+      elif [ -t 0 ]; then
+        user ' An email is required (Ctrl-D clears the line, it does not cancel).'
+      else
+        warn 'no author email on stdin - skipping gitconfig (rerun bootstrap in a terminal)'
+        return 0
+      fi
+    done
+
+    # Substitute per line instead of sed: a value containing '/', '&' or '\'
+    # would otherwise break the s/// expression or be read as a backreference.
+    local line
+    while IFS= read -r line || [ -n "$line" ]; do
+      line="${line/AUTHORNAME/$git_authorname}"
+      line="${line/AUTHOREMAIL/$git_authoremail}"
+      printf '%s\n' "$line"
+    done < git/gitconfig.local.symlink.example > git/gitconfig.local.symlink
 
     success 'gitconfig'
   fi
@@ -187,9 +217,9 @@ then
   info "applying macOS security defaults"
   if "$DOTFILES_ROOT/macos/set-security-defaults.sh" 2>&1 | while read -r data; do info "$data"; done
   then
-    success "macOS security defaults applied"
+    success "macOS security defaults checked (see the lines above)"
   else
-    fail "error applying macOS security defaults (run sudo macos/set-security-defaults.sh manually)"
+    fail "error applying macOS security defaults (run macos/set-security-defaults.sh manually)"
   fi
 
   info "setting hostname"
@@ -245,13 +275,5 @@ echo ''
 if [ "$(uname -s)" == "Darwin" ]
 then
   echo ''
-  user 'Some macOS defaults require a restart to take effect. Restart now? [y/N]'
-  read -rn 1 restart_answer
-  echo ''
-  if [ "$restart_answer" = "y" ] || [ "$restart_answer" = "Y" ]
-  then
-    sudo shutdown -r now
-  else
-    info 'Restart skipped - remember to restart later for all settings to apply.'
-  fi
+  info 'Restart when convenient - some macOS defaults apply at next login.'
 fi
