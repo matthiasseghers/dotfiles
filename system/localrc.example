@@ -13,5 +13,10 @@
 # system/localgroups.example), not here. DOTFILES_GROUPS still works as a
 # one-off override, e.g. DOTFILES_GROUPS="work" dot
 
+# Package prefix override: the hardware decides by default (silicon ->
+# /opt/homebrew, anything else -> /opt/local). Declare it here only if this
+# machine deviates:
+# export DOTFILES_PKG_PREFIX=/opt/local
+
 # Example: Machine-specific PATH additions
 # export PATH="$HOME/some/tool/bin:$PATH"

@@ -47,12 +47,13 @@ if [ -z "$requested" ]; then
 fi
 
 if [ "${DOTFILES_LEGACY_INTEL:-0}" = "1" ]; then
-  # A CI smoke runner can be Intel without MacPorts - exit cleanly there.
-  if ! command -v port >/dev/null 2>&1; then
-    echo "› Install MacPorts from https://www.macports.org/install.php, then re-run script/install"
-    exit 0
+  # A CI smoke runner can be Intel without MacPorts: skip the ports, say so,
+  # and still reach the per-topic installers below (ssh/install.sh and friends).
+  if command -v port >/dev/null 2>&1; then
+    dotfiles_intel_install_ports
+  else
+    echo "› MacPorts not installed - ports skipped; install it from https://www.macports.org/install.php, then re-run script/install"
   fi
-  dotfiles_intel_install_ports
 else
   dotfiles_brew_shellenv
 

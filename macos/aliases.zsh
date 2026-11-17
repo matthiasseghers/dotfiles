@@ -11,9 +11,9 @@ alias cleanup='find . -name "*.DS_Store" -delete && echo "Cleaned .DS_Store file
 alias showfiles='defaults write com.apple.finder AppleShowAllFiles YES && killall Finder'
 alias hidefiles='defaults write com.apple.finder AppleShowAllFiles NO && killall Finder'
 
-# Update all Homebrew packages (MacPorts on legacy Intel)
+# Update all packages (MacPorts on legacy Intel, Homebrew everywhere else)
 brewup() {
-  if [[ -x /opt/local/bin/port ]]; then
+  if [[ "${DOTFILES_PKG_PREFIX:-}" == "/opt/local" ]]; then
     sudo port selfupdate && sudo port upgrade outdated
   else
     brew update && brew upgrade && brew cleanup

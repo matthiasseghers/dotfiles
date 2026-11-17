@@ -52,6 +52,7 @@ dotfiles_intel_install_ports() {
     [ -n "$line" ] || continue
     port="$line"
     echo "› port install $port"
-    sudo port install "$port"
+    # One failed port must not abort the caller's set -e: the loop continues.
+    sudo port install "$port" || echo "› port install $port failed (continuing)"
   done < "$root/Portsfile"
 }

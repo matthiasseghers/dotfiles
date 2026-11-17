@@ -76,15 +76,15 @@ esac
 
 if [ "${DOTFILES_LEGACY_INTEL:-0}" = "1" ]; then
   # Legacy Intel: Homebrew no longer builds bottles, so MacPorts owns the CLI
-  # tools. No exit here: script/bootstrap sources this file inside a pipe.
+  # tools. Only the updates live here: script/install runs the Portsfile
+  # install, and calling it in both places installed every port twice.
+  # No exit here: script/bootstrap sources this file inside a pipe.
   if command -v port >/dev/null 2>&1; then
     echo "› port selfupdate"
     sudo port selfupdate
 
     echo "› port upgrade outdated"
     sudo port upgrade outdated
-
-    dotfiles_intel_install_ports
   else
     echo "› MacPorts not installed - install it from https://www.macports.org/install.php and re-run dot"
   fi
